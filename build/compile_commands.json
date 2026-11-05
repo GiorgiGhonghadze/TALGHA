@@ -22,5 +22,11 @@
   "command": "/usr/bin/c++ -DDATADIR=\\\"/usr/local/share/libint/2.9.0\\\" -isystem /usr/include/eigen3 -isystem /home/pseudo/anaconda3/include -g -O0 -g -std=gnu++17 -fopenmp -o CMakeFiles/main.dir/MP2.cpp.o -c /home/pseudo/BIGCPP/MP2.cpp",
   "file": "/home/pseudo/BIGCPP/MP2.cpp",
   "output": "CMakeFiles/main.dir/MP2.cpp.o"
+},
+{
+  "directory": "/home/pseudo/BIGCPP/build",
+  "command": "/usr/bin/c++ -DDATADIR=\\\"/usr/local/share/libint/2.9.0\\\" -isystem /usr/include/eigen3 -isystem /home/pseudo/anaconda3/include -g -O0 -g -std=gnu++17 -fopenmp -o CMakeFiles/main.dir/CCSD.cpp.o -c /home/pseudo/BIGCPP/CCSD.cpp",
+  "file": "/home/pseudo/BIGCPP/CCSD.cpp",
+  "output": "CMakeFiles/main.dir/CCSD.cpp.o"
 }
 ]

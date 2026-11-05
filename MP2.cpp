@@ -34,8 +34,7 @@ void MP2::compute_correlation(double &Escf, int &n_occ, int &n_vir, Eigen::Matri
 
     
     double E_mp2 = 0.0;
-    Eigen::Tensor<double, 4> ijab = ERIcompute.get_contracted_tensor();
-    Eigen::Tensor<double, 4> iajb_tensor = ERIcompute.get_contracted_tensor();
+    Eigen::Tensor<double, 4> iajb_tensor = ERIcompute.motransform_eri(C_occ_tensor, C_vir_tensor, C_occ_tensor, C_vir_tensor);
 
 
     //EVALUATE MP2 CORRELATION

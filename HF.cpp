@@ -283,6 +283,7 @@ void HF::scf(std::string& scf_mode) {
         Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Focksolver(Fock_mat_o);
         if (Focksolver.info() != Eigen::Success) abort();
         C_mat = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
+        C = X_mat * Focksolver.eigenvectors();
         P_mat_new = 2.0 * C_mat * C_mat.transpose();
         P_mat = 0.5 * P_mat + 0.5 * P_mat_new;
 

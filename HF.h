@@ -15,6 +15,7 @@ public:
 
     Eigen::MatrixXd get_C_occ() const { return C_occ; }
     Eigen::MatrixXd get_C_vir() const { return C_vir; }
+    Eigen::MatrixXd get_C() const { return C; }
     int get_n_occ() const {return total_electrons/2;}
     int get_n_vir() const {return nbf - total_electrons/2;}
     Eigen::VectorXd get_Eorb() const { return Eorb; }
@@ -27,7 +28,7 @@ private:
     int nbf, total_electrons;
     double Enuc, Eprev = 0, Ecurr = 1, thresh = 1e-6;
 
-    Eigen::MatrixXd S_mat, T_mat, V_mat, Hcore_mat, Fock_mat, Fock_mat_o, X_mat, C_mat, P_mat, P_mat_new, J_mat, K_mat, C_occ, C_vir;
+    Eigen::MatrixXd S_mat, T_mat, V_mat, Hcore_mat, Fock_mat, Fock_mat_o, X_mat, C_mat, P_mat, P_mat_new, J_mat, K_mat, C, C_occ, C_vir;
     Eigen::VectorXd Eorb; 
 
     double compute_Vnn(const std::vector<libint2::Atom>& atoms);

@@ -129,6 +129,30 @@ main/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
 .PHONY : main/fast
 
+CCSD.o: CCSD.cpp.o
+.PHONY : CCSD.o
+
+# target to build an object file
+CCSD.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CCSD.cpp.o
+.PHONY : CCSD.cpp.o
+
+CCSD.i: CCSD.cpp.i
+.PHONY : CCSD.i
+
+# target to preprocess a source file
+CCSD.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CCSD.cpp.i
+.PHONY : CCSD.cpp.i
+
+CCSD.s: CCSD.cpp.s
+.PHONY : CCSD.s
+
+# target to generate assembly for a file
+CCSD.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CCSD.cpp.s
+.PHONY : CCSD.cpp.s
+
 ERI.o: ERI.cpp.o
 .PHONY : ERI.o
 
@@ -234,6 +258,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... main"
+	@echo "... CCSD.o"
+	@echo "... CCSD.i"
+	@echo "... CCSD.s"
 	@echo "... ERI.o"
 	@echo "... ERI.i"
 	@echo "... ERI.s"

@@ -9,6 +9,7 @@
 #include "HF.h"
 #include "ERI.h"
 #include "MP2.h"
+#include "CCSD.h"
 
 
 
@@ -94,6 +95,7 @@ int main(int argc, char* argv[]) {
 
         int n_occ = HFsolver.get_n_occ();
         int n_vir = HFsolver.get_n_vir();
+        
         Eigen::MatrixXd C_occ = HFsolver.get_C_occ();
         Eigen::MatrixXd C_vir = HFsolver.get_C_vir();
         Eigen::VectorXd eps = HFsolver.get_Eorb(); 
@@ -106,6 +108,12 @@ int main(int argc, char* argv[]) {
         cout << "\n" << "FINAL HF ENERGY IS " << Escf << " Eh\n";
 
     }
+
+    Eigen::MatrixXd C = HFsolver.get_C();
+    Eigen::VectorXd eps = HFsolver.get_Eorb();
+
+    CCSD CCSDsolver(atoms, basis);
+    CCSDsolver.compute_ccsd(C, eps);
     
     libint2::finalize();
 

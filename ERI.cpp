@@ -79,7 +79,7 @@ void ERI::compute_eri(){
 
 }
 
-void ERI::motransform_eri(const Eigen::Tensor<double, 2> &C1, const Eigen::Tensor<double, 2> &C2, const Eigen::Tensor<double, 2> &C3,const Eigen::Tensor<double, 2> &C4){
+Eigen::Tensor<double, 4> ERI::motransform_eri(const Eigen::Tensor<double, 2> &C1, const Eigen::Tensor<double, 2> &C2, const Eigen::Tensor<double, 2> &C3,const Eigen::Tensor<double, 2> &C4){
     
     
     Eigen::array<Eigen::IndexPair<int>, 1> contract = {
@@ -92,7 +92,7 @@ void ERI::motransform_eri(const Eigen::Tensor<double, 2> &C1, const Eigen::Tenso
     Eigen::Tensor<double, 4> I3 = I2.contract(C3, contract);
     Eigen::Tensor<double, 4> I4 = I3.contract(C4, contract);
 
-    contracted_tensor = I4;
+    return I4;
 
     // cout << "\n" << I4 << "\n";
 

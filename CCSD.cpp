@@ -233,13 +233,110 @@ void CCSD::compute_intermediates(){
     }
 
     //CALCULATE W INTERMIDIATES
+    W_mnij.resize(n_occ, n_occ, n_occ, n_occ);
+    W_mnij.setZero();
+
+    for (int m = 0; m < n_occ; m++) {
+        for (int n = 0; n < n_occ; n++) {
+            for (int i = 0; i < n_occ; i++) {
+                for (int j = 0; j < n_occ; j++) {
+                    double value = V_oooo(m,n,i,j);
+
+                    for (int e = 0; e < n_vir; e++) {
+
+                        value += t1(j,e) * V_ooov(m,n,i,e);
+                        value -= t1(i,e) * V_ooov(m,n,j,e);
+
+                    } 
+
+                    for (int e = 0; e < n_vir; e++) {
+                        for (int f = 0; f < n_vir; f++) {
+
+                            value += 0.25 * tau(i,j,e,f) * V_oovv(m,n,e,f);
+                    
+                        }
+                    }   
+                    
+                    W_mnij(m,n,i,j) = value;
+                }
+            }
+        }
+    }
 
 
 
-    
+    W_abef.resize(n_vir, n_vir, n_vir, n_vir);
+    W_abef.setZero();
 
-    cout << "\n" << F_mi(0,0) << "\n";
-    cout << "\n" << F_ae(0,0) << "\n";
+    for (int a = 0; a < n_vir; a++) {
+        for (int b = 0; b < n_vir; b++) {
+            for (int e = 0; e < n_vir; e++) {
+                for (int f = 0; f < n_vir; f++) {
+                    double value = V_vvvv(a,b,e,f);
+
+                    for (int m = 0; m < n_occ; m++) {
+                        
+                        value += t1(m,b) * V_ovvv(m,a,e,f);
+                        value -= t1(m,a) * V_ovvv(m,b,e,f);
+                        
+                    } 
+
+                    for (int m = 0; m < n_occ; m++) {
+                        for (int n = 0; n < n_occ; n++) {
+
+                            value += 0.25 * tau(m,n,a,b) * V_oovv(m,n,e,f);
+                    
+                        }
+                    }   
+                    
+                    W_abef(a,b,e,f) = value;
+                }
+            }
+        }
+    }
+
+    W_mbej.resize(n_occ, n_vir, n_vir, n_occ);
+    W_mbej.setZero();
+
+    for (int m = 0; m < n_occ; m++) {
+        for (int b = 0; b < n_vir; b++) {
+            for (int e = 0; e < n_vir; e++) {
+                for (int j = 0; j < n_occ; j++) {
+                    double value = V_ovvo(m,b,e,j);
+
+                    for (int f = 0; f < n_vir; f++) {
+                    
+                        value += t1(j,f) * V_ovvv(m,b,e,f);
+                        
+                    } 
+                    
+                    for (int n = 0; n < n_occ; n++) {
+                        
+                        value += t1(n,b) * V_ooov(m,n,j,e);
+                        
+                    } 
+
+                    for (int f = 0; f < n_vir; f++) {
+                        for (int n = 0; n < n_occ; n++) {
+
+                            value += (0.5*t2(j,n,f,b) + t1(j,f)*t1(n,b) ) * V_oovv(m,n,e,f);
+                    
+                        }
+                    }   
+                    
+                    W_mbej(m,b,e,j) = value;
+                }
+            }
+        }
+    }
+
+
+
+    // cout << "\n" << F_mi(0,0) << "\n";
+    // cout << "\n" << F_ae(0,0) << "\n";
+    // cout << "\n" << W_mnij(0,1,0,1) << "\n";
+    // cout << "\n" << W_abef(0,1,0,1) << "\n";
+    // cout << "\n" << W_mbej(0,0,0,0) << "\n";
 
 
 

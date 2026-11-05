@@ -27,6 +27,7 @@ private:
     Tensor<double, 2> t1;
     Tensor<double, 4> t2, tau, tau_tilde;
     Tensor<double, 2> F_me, F_mi, F_ae;
+    Tensor<double, 4> W_mnij, W_abef, W_mbej;
     
 
     void init_integrals(MatrixXd &C, Eigen::VectorXd &eps);

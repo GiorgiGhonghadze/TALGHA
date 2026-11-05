@@ -1,0 +1,20 @@
+# CMake build outputs and caches
+build/
+bin/
+lib/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Compiled objects, binaries, and libraries
+*.o
+*.a
+*.so
+*.dylib
+*.out
+
+# Tooling and editor artifacts
+.cache/
+.vscode/
+compile_commands.json

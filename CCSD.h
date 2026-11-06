@@ -21,18 +21,27 @@ private:
     std::string basis;
     libint2::BasisSet obs;
     int nbf, total_electrons, n_occ, n_vir;
+    double E_corr, residual_thresh, residual;
+    
     Eigen::VectorXd f;
     Tensor<double, 4> ERI_AO, ERI_MO, V;
     Tensor<double, 4> V_oooo, V_vvvv, V_oovv, V_ovvo, V_ooov, V_ovvv;
+    //AMPLITUDES
     Tensor<double, 2> t1;
     Tensor<double, 4> t2, tau, tau_tilde;
+    //INTERMIDIATES
     Tensor<double, 2> F_me, F_mi, F_ae;
     Tensor<double, 4> W_mnij, W_abef, W_mbej;
+    //RESIDUALS
+    Tensor<double, 2> R1;
+    Tensor<double, 4> R2;
     
 
     void init_integrals(MatrixXd &C, Eigen::VectorXd &eps);
     void init_amplitudes();
     void compute_intermediates();
+    void compute_residuals();
+    void evaluate_energy();
     
 }; 
 

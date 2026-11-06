@@ -136,22 +136,9 @@ void CCSD::init_amplitudes(){
             }
         }
     }
-
-    Eigen::array<Eigen::IndexPair<int>, 4> contract_all = {
-    Eigen::IndexPair<int>(0, 0), // i with i
-    Eigen::IndexPair<int>(1, 1), // j with j
-    Eigen::IndexPair<int>(2, 2), // a with a
-    Eigen::IndexPair<int>(3, 3)  // b with b
-    };
-
-    //
-    // Eigen::Tensor<double, 0> emp2_tensor = V_oovv.contract(t2, contract_all); 
-    // double e_mp2 = 0.25 * emp2_tensor();
-
 }
 
 void CCSD::compute_intermediates(){
-
 
     //CALCULATE EFFECTIVE AMPLITUDES
     tau.resize(n_occ, n_occ, n_vir, n_vir);
@@ -163,17 +150,14 @@ void CCSD::compute_intermediates(){
         for (int j = 0; j < n_occ; j++) {
             for (int a = 0; a < n_vir; a++) {
                 for (int b = 0; b < n_vir; b++) {
-
-                    tau(i, j, a, b) = t2(i, j, a, b) +  t1(i, a) * t1(j, b) - t1(i, b) * t1(j, a);
-                    tau_tilde(i, j, a, b) = t2(i, j, a, b) +  0.5 * (t1(i, a) * t1(j, b) - t1(i, b) * t1(j, a));
-                    
+                    tau(i, j, a, b) = t2(i, j, a, b) + t1(i, a) * t1(j, b) - t1(i, b) * t1(j, a);
+                    tau_tilde(i, j, a, b) = t2(i, j, a, b) + 0.5 * (t1(i, a) * t1(j, b) - t1(i, b) * t1(j, a));
                 }
             }
         }
     }
 
-
-    //CALCULATE F INTERMIDIATES
+    //CALCULATE F INTERMEDIATES
     F_me.resize(n_occ, n_vir);
     F_me.setZero();
 
@@ -181,14 +165,11 @@ void CCSD::compute_intermediates(){
         for (int n = 0; n < n_occ; n++) {
             for (int e = 0; e < n_vir; e++) {
                 for (int f = 0; f < n_vir; f++) {
-
                     F_me(m,e) += t1(n, f) * V_oovv(m, n, e, f);
-                    
                 }
             }
         }
     }
-
 
     F_mi.resize(n_occ, n_occ);
     F_mi.setZero();
@@ -197,13 +178,11 @@ void CCSD::compute_intermediates(){
         for (int i = 0; i < n_occ; i++) {
             double value = 0.0;
             for (int e = 0; e < n_vir; e++) {
-                value += t1(i, e) * F_me(m,e);
+                value += 0.5 * t1(i, e) * F_me(m,e);
                 for (int n = 0; n < n_occ; n++){
                     value += t1(n,e) * V_ooov(m, n, i, e);
                     for (int f = 0; f < n_vir; f++) {
-
                         value += 0.5 * tau_tilde(i, n, e, f) * V_oovv(m,n,e,f);
-
                     }
                 }
             }
@@ -218,13 +197,11 @@ void CCSD::compute_intermediates(){
         for (int e = 0; e < n_vir; e++) {
             double value = 0.0;
             for (int m = 0; m < n_occ; m++) {
-                value -= t1(m, a) * F_me(m,e);
+                value -= 0.5 * t1(m, a) * F_me(m,e);
                 for (int f = 0; f < n_vir; f++){
                     value -= t1(m,f) * V_ovvv(m, a, e, f);
                     for (int n = 0; n < n_occ; n++) {
-
                         value -= 0.5 * tau_tilde(m, n, a, f) * V_oovv(m,n,e,f);
-
                     }
                 }
             }
@@ -232,7 +209,7 @@ void CCSD::compute_intermediates(){
         }
     }
 
-    //CALCULATE W INTERMIDIATES
+    //CALCULATE W INTERMEDIATES
     W_mnij.resize(n_occ, n_occ, n_occ, n_occ);
     W_mnij.setZero();
 
@@ -243,17 +220,13 @@ void CCSD::compute_intermediates(){
                     double value = V_oooo(m,n,i,j);
 
                     for (int e = 0; e < n_vir; e++) {
-
                         value += t1(j,e) * V_ooov(m,n,i,e);
                         value -= t1(i,e) * V_ooov(m,n,j,e);
-
                     } 
 
                     for (int e = 0; e < n_vir; e++) {
                         for (int f = 0; f < n_vir; f++) {
-
                             value += 0.25 * tau(i,j,e,f) * V_oovv(m,n,e,f);
-                    
                         }
                     }   
                     
@@ -262,8 +235,6 @@ void CCSD::compute_intermediates(){
             }
         }
     }
-
-
 
     W_abef.resize(n_vir, n_vir, n_vir, n_vir);
     W_abef.setZero();
@@ -275,17 +246,13 @@ void CCSD::compute_intermediates(){
                     double value = V_vvvv(a,b,e,f);
 
                     for (int m = 0; m < n_occ; m++) {
-                        
                         value += t1(m,b) * V_ovvv(m,a,e,f);
                         value -= t1(m,a) * V_ovvv(m,b,e,f);
-                        
                     } 
 
                     for (int m = 0; m < n_occ; m++) {
                         for (int n = 0; n < n_occ; n++) {
-
                             value += 0.25 * tau(m,n,a,b) * V_oovv(m,n,e,f);
-                    
                         }
                     }   
                     
@@ -305,22 +272,16 @@ void CCSD::compute_intermediates(){
                     double value = V_ovvo(m,b,e,j);
 
                     for (int f = 0; f < n_vir; f++) {
-                    
                         value += t1(j,f) * V_ovvv(m,b,e,f);
-                        
                     } 
                     
                     for (int n = 0; n < n_occ; n++) {
-                        
                         value += t1(n,b) * V_ooov(m,n,j,e);
-                        
                     } 
 
                     for (int f = 0; f < n_vir; f++) {
                         for (int n = 0; n < n_occ; n++) {
-
-                            value += (0.5*t2(j,n,f,b) + t1(j,f)*t1(n,b) ) * V_oovv(m,n,e,f);
-                    
+                            value -= (0.5 * t2(j,n,f,b) + t1(j,f) * t1(n,b)) * V_oovv(m,n,e,f);
                         }
                     }   
                     
@@ -329,33 +290,189 @@ void CCSD::compute_intermediates(){
             }
         }
     }
+}
 
+void CCSD::compute_residuals(){
 
+    //CALCULATE R1 AND R2
+    R1.resize(n_occ, n_vir);
+    R1.setZero();
 
-    // cout << "\n" << F_mi(0,0) << "\n";
-    // cout << "\n" << F_ae(0,0) << "\n";
-    // cout << "\n" << W_mnij(0,1,0,1) << "\n";
-    // cout << "\n" << W_abef(0,1,0,1) << "\n";
-    // cout << "\n" << W_mbej(0,0,0,0) << "\n";
+    for (int i = 0; i < n_occ; i++) {
+        for (int a = 0; a < n_vir; a++) {
+            double value = 0.0;
+            for (int e = 0; e < n_vir; e++) {
+                value += t1(i,e) * F_ae(a,e);
+            }
 
+            for (int m = 0; m < n_occ; m++) {
+                value -= t1(m,a) * F_mi(m,i);
 
+                for (int e = 0; e < n_vir; e++) {
+                    value += t2(i,m,a,e) * F_me(m,e);
 
-    // std::cout << "Shape: [ ";
-    // for (auto dim : tau.dimensions()) {
-    //     std::cout << dim << " ";
-    // }
-    // std::cout << "]\n";
+                    for (int f = 0; f < n_vir; f++) {
+                        value -= 0.5 * t2(i,m,e,f) * V_ovvv(m,a,e,f);
+                    }
+
+                    for (int n = 0; n < n_occ; n++) {
+                        value -= 0.5 * t2(m,n,a,e) * V_ooov(m,n,i,e);
+                    }
+                }
+            }
+            
+            for (int n = 0; n < n_occ; n++) {
+                for (int f = 0; f < n_vir; f++) {
+                    value += t1(n,f) * V_ovvo(n,a,f,i);
+                }
+            }
+
+            R1(i,a) = value;
+        }
+    }
+
+    R2.resize(n_occ, n_occ, n_vir, n_vir);
+    R2.setZero();
+
+    for (int i = 0; i < n_occ; i++) {
+        for (int j = 0; j < n_occ; j++) {
+            for (int a = 0; a < n_vir; a++) {
+                for (int b = 0; b < n_vir; b++) {
+                    double value = V_oovv(i,j,a,b);
+
+                    for (int e = 0; e < n_vir; e++) {
+                        
+                        value += t1(j,e) * V_ovvv(i,e,a,b);
+                        value -= t1(i,e) * V_ovvv(j,e,a,b);
+
+                        value += t2(i,j,a,e) * F_ae(b,e);
+                        value -= t2(i,j,b,e) * F_ae(a,e);
+
+                        for (int m = 0; m < n_occ; m++) {
+                            F_ae(b,e) -= 0.5 * t1(m,b) * F_me(m,e);
+                            F_ae(a,e) -= 0.5 * t1(m,a) * F_me(m,e);
+                        }
+
+                        for (int f = 0; f < n_vir; f++) {
+
+                            value += 0.5 * tau(i,j,e,f) * W_abef(a,b,e,f);
+
+                        }
+                    }
+                    
+                    for (int m = 0; m < n_occ; m++) {
+                        
+                        value -= t1(m,a) * V_ooov(i,j,m,b);
+                        value += t1(m,b) * V_ooov(i,j,m,a);
+
+                        double F_mj_eff = F_mi(m,j);
+                        double F_mi_eff = F_mi(m,i);
+                        for (int e = 0; e < n_vir; e++) {
+                            F_mj_eff += 0.5 * t1(j,e) * F_me(m,e);
+                            F_mi_eff += 0.5 * t1(i,e) * F_me(m,e);
+                        }
+                        value -= t2(i,m,a,b) * F_mj_eff;
+                        value += t2(j,m,a,b) * F_mi_eff;
+                        
+                        for (int n = 0; n < n_occ; n++) {
+                            value += 0.5 * tau(m,n,a,b) * W_mnij(m,n,i,j); 
+                        }
+
+                        for (int e = 0; e < n_vir; e++) {
+                            value += t2(i,m,a,e) * W_mbej(m,b,e,j) - t1(i,e) * t1(m,a) * V_ovvo(m,b,e,j);
+                            value -= t2(j,m,a,e) * W_mbej(m,b,e,i) - t1(j,e) * t1(m,a) * V_ovvo(m,b,e,i);
+                            value -= t2(i,m,b,e) * W_mbej(m,a,e,j) - t1(i,e) * t1(m,b) * V_ovvo(m,a,e,j);
+                            value += t2(j,m,b,e) * W_mbej(m,a,e,i) - t1(j,e) * t1(m,b) * V_ovvo(m,a,e,i);
+                        }
+                    }
+
+                    R2(i,j,a,b) = value;
+                }
+            }
+        }
+    }
+
+    //UPDATE AMPLITUDES AND COMPUTE TRUE RESIDUALS
+    for (int i = 0; i < n_occ; i++){
+        for (int a = 0; a < n_vir; a++){
+            double denom = f(i) - f(n_occ + a);
+            R1(i,a) -= denom * t1(i,a);
+            t1(i,a) += R1(i,a) / denom;
+        }
+    }
+
+    for (int i = 0; i < n_occ; i++){
+        for (int j = 0; j < n_occ; j++){
+            for (int a = 0; a < n_vir; a++){
+                for (int b = 0; b < n_vir; b++){
+                    double denom = f(i) + f(j) - f(n_occ + a) - f(n_occ + b);
+                    R2(i,j,a,b) -= denom * t2(i,j,a,b);
+                    t2(i,j,a,b) += R2(i,j,a,b) / denom;
+                }
+            }
+        }
+    }
+
+    double sum = 0.0;
+
+    for (int i = 0; i < n_occ; i++) {
+        for (int a = 0; a < n_vir; a++) {
+            sum += pow(R1(i,a),2);
+        }
+    }
+
+    for (int i = 0; i < n_occ; i++) {
+        for (int j = 0; j < n_occ; j++) {
+            for (int a = 0; a < n_vir; a++) {
+                for (int b = 0; b < n_vir; b++) {
+                    sum += pow(R2(i,j,a,b),2);
+                }
+            }
+        }
+    }
+
+    int total_amplitudes = n_occ * n_vir + pow(n_occ,2) * pow(n_vir,2);
+    residual = std::sqrt(sum / (double)total_amplitudes);
+}
+
+void CCSD::evaluate_energy(){
+
+    E_corr = 0.0;
+    for (int i = 0; i < n_occ; i++){
+        for (int j = 0; j < n_occ; j++){
+            for (int a = 0; a < n_vir; a++){
+                for (int b = 0; b < n_vir; b++){
+
+                    E_corr += 0.25 * V_oovv(i,j,a,b) * t2(i,j,a,b);
+                    E_corr += 0.5 * V_oovv(i,j,a,b) * t1(i,a)*t1(j,b);
+
+                }
+            }
+        }
+    }
 
 }
 
 void CCSD::compute_ccsd(MatrixXd &C, Eigen::VectorXd &eps){
 
+    residual_thresh = 2.5e-5;
+    residual = 1;
 
     init_integrals(C, eps);
     init_amplitudes();
-    compute_intermediates();
-    // cout << "\n" << "MP2 CORRELATION ENERGY IS " << E_mp2 << " Eh\n";
-    // cout << "FINAL MP2 ENERGY IS " << Escf + E_mp2 << " Eh\n";
+    evaluate_energy();
+    cout << "Iter 0 " << E_corr << "\n";
+
+    int iter = 1;
+
+    while (abs(residual) > residual_thresh) {
+
+        compute_intermediates();
+        compute_residuals();
+        evaluate_energy();
+
+        cout << "Iter " << iter << " " << E_corr << " " << residual << "\n";
+        iter++;
+    }
 
 }
-

@@ -453,7 +453,7 @@ void CCSD::evaluate_energy(){
 
 }
 
-void CCSD::compute_ccsd(MatrixXd &C, Eigen::VectorXd &eps){
+void CCSD::compute_ccsd(MatrixXd &C, Eigen::VectorXd &eps, double &E_scf){
 
     residual_thresh = 2.5e-5;
     residual = 1;
@@ -461,7 +461,7 @@ void CCSD::compute_ccsd(MatrixXd &C, Eigen::VectorXd &eps){
     init_integrals(C, eps);
     init_amplitudes();
     evaluate_energy();
-    cout << "Iter 0 " << E_corr << "\n";
+    cout << "\nIter 0 " << E_scf + E_corr << "\n";
 
     int iter = 1;
 
@@ -471,8 +471,10 @@ void CCSD::compute_ccsd(MatrixXd &C, Eigen::VectorXd &eps){
         compute_residuals();
         evaluate_energy();
 
-        cout << "Iter " << iter << " " << E_corr << " " << residual << "\n";
+        cout << "Iter " << iter << " " << E_scf + E_corr << " " << residual << "\n";
         iter++;
     }
+
+    cout << "\n" << "FINAL CCSD ENERGY IS " <<  E_scf + E_corr  << " Eh\n";
 
 }

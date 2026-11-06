@@ -18,56 +18,63 @@ using std::cout;
 using std::string;
 using std::vector;
 
+void print_header();
+
 
 int main(int argc, char* argv[]) {
-    
-    auto start = high_resolution_clock::now();
 
-
-    int counter = 0, dim, charge, mult;
+    int counter = 0, xyzstart, charge, mult;
     string line, method, basis, fline;
+    string delimiter = " ";
+    string scfMode = "DIIS";
+    vector<string> xyzlines;
     
-    vector<string> xyztext;
-    vector<string>::size_type sz;
-    vector<double> xyz;
-    
-    
+
+    auto start = high_resolution_clock::now();
     std::ifstream input(argv[1]);
     std::ofstream xyzFile("geom.xyz");
 
-    // file checkkk
+    //file checkkk
     if (argc < 2) {
         std::cerr << "no input dumbass\n";
         return 1;
     }
 
+    print_header();
     cout << "Parsing input file: "  << argv[1] << std::endl;
     
     //PARSE THE INPUT AND CREATE XYZ
     while (std::getline(input, line)) {
 
-        switch (counter)
-        {
-        case 0:
-            method = line;
-            break;
-        case 1:
-            basis =  line;
-            break;
-        default:
-            break;
+        if(counter == 0){
+
+            method = line.substr(0, line.find(delimiter));
+            method.erase (std::remove (method.begin(), method.end(), ' '), method.end());
+            basis = line.substr(line.find(delimiter) + 1);
+            basis.erase (std::remove (basis.begin(), basis.end(), ' '), basis.end());
+
         }
-        // cout << line << std::endl;
-        if (counter >= 4)
+        if(line.substr(0, line.find(delimiter)) == "xyz"){
+
+            xyzstart = counter;
+
+        } 
+        if (counter > xyzstart)
         {
-            
-            xyzFile << line << "\n";
+
+            xyzlines.push_back(line);
            
         }
         
         counter++; 
     }
 
+    //CREATE AN XYZ FILE
+    xyzFile << xyzlines.size() << "\n";
+    xyzFile << "\n";
+    for (const auto& line : xyzlines) {
+        xyzFile << line << "\n"; 
+    }
     xyzFile.close();
     input.close();
 
@@ -75,21 +82,19 @@ int main(int argc, char* argv[]) {
     libint2::initialize(); // INITIALIZE LIBINT2
 
     //CREATE BASIS AND ATOM FILES FOR LIBINT2
-    string xyzfilename = "geom.xyz";
+    string xyzfilename = "geom.xyz"; // see XYZ format description at http://en.wikipedia.org/wiki/XYZ_file_format
     std::ifstream input_file(xyzfilename);
     vector<libint2::Atom> atoms = libint2::read_dotxyz(input_file);
 
 
     cout << "Basis set is set to " << basis << "\n";
-    cout << method << "Calculation started!\n" << std::endl;
-
-    string solver = "noDIIS";
+    cout << method << " Calculation started!\n" << "\n";
 
     //RUN HF CALC
     HF HFsolver(atoms, basis);
-    HFsolver.scf(solver);
-    double Escf = HFsolver.get_Escf();
-    cout << "\n" << "FINAL SCF ENERGY IS " << Escf << " Eh\n";
+    HFsolver.scf(scfMode);
+    double E_scf = HFsolver.get_Escf();
+    cout << "\n" << "FINAL SCF ENERGY IS " << E_scf << " Eh\n";
 
     if (method == "MP2"){
 
@@ -101,21 +106,24 @@ int main(int argc, char* argv[]) {
         Eigen::VectorXd eps = HFsolver.get_Eorb(); 
 
         MP2 MP2solver(atoms,basis);
-        MP2solver.compute_correlation(Escf, n_occ, n_vir, C_occ, C_vir, eps);
+        MP2solver.compute_correlation(E_scf, n_occ, n_vir, C_occ, C_vir, eps);
+
+    }else if (method == "CCSD"){
+        Eigen::MatrixXd C = HFsolver.get_C();
+        Eigen::VectorXd eps = HFsolver.get_Eorb();
+
+        CCSD CCSDsolver(atoms, basis);
+        CCSDsolver.compute_ccsd(C, eps, E_scf);
+    
+        libint2::finalize();
+
+
 
     }else{
 
-        cout << "\n" << "FINAL HF ENERGY IS " << Escf << " Eh\n";
+        cout << "\n" << "FINAL HF ENERGY IS " << E_scf << " Eh\n";
 
     }
-
-    Eigen::MatrixXd C = HFsolver.get_C();
-    Eigen::VectorXd eps = HFsolver.get_Eorb();
-
-    CCSD CCSDsolver(atoms, basis);
-    CCSDsolver.compute_ccsd(C, eps);
-    
-    libint2::finalize();
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
@@ -125,4 +133,66 @@ int main(int argc, char* argv[]) {
 
     return 0;
     
+}
+
+void print_header(){
+
+
+
+
+
+    cout << "\n                                               #######    #    #        #####  #     #    #   ";
+    cout << "\n                                                  #      # #   #       #     # #     #   # #  ";
+    cout << "\n                                                  #     #   #  #       #       #     #  #   # ";
+    cout << "\n                                                  #    #     # #       #  #### ####### #     #";
+    cout << "\n                                                  #    ####### #       #     # #     # #######";
+    cout << "\n                                                  #    #     # #       #     # #     # #     #";
+    cout << "\n                                                  #    #     # #######  #####  #     # #     #";
+    cout << "\n";
+    cout << "\n";                                                                                                
+    cout << "\n";                                                                                                   
+    cout << "\n";                                                                                                
+    cout << "\n                                                                   ...------------..                           ";       
+    cout << "\n                                                              ..-++-....        ...--++..                      ";       
+    cout << "\n                                                           .-+-..                     ..-+-.                   ";       
+    cout << "\n                                                       ..-+.                              .+-.   ....          ";       
+    cout << "\n                                                     .--.           .  .....                .+-. .--.          ";       
+    cout << "\n                                                   .--.           ...  ....   ......         .--  ..           ";       
+    cout << "\n                                                 .--.    .. ..  -+-++..+--+..+..-- .  .--.    .+. ..           ";       
+    cout << "\n                                               .--      .....+-+-..--....-+..  ..+-.+-..   .   .+              ";       
+    cout << "\n                                              .-.       .+---   ..-  ..-.  ..--.......-+-+--.   #.             ";       
+    cout << "\n                                            .--.  .    .+..-.   .. .-.  ......--------...--.   -+              ";       
+    cout << "\n                                           .+-  .-..+++-. ....   .-.      ..-+..     ...---#. .+.              ";       
+    cout << "\n                                          .+.     --.-   -.-.        -   .++    .-+        .###.               ";       
+    cout << "\n                                         -+.     .-.-.    .-   .   ...  -+.       .+--                         ";       
+    cout << "\n                                        .+.  .-+--. ..   .-   -   .-   .+.                  .+-                ";       
+    cout << "\n                                       -+.  .-+.   .-    ..  ..  .- ...+.                    ..                ";       
+    cout << "\n                                      -+  .+....     .-.+#-...+#-+  ..+-                                       ";       
+    cout << "\n                                    .--.  -. ..  ....+-.       .-+....#.                                       ";       
+    cout << "\n                                   .--.-..-. ..  .--.      .-.....+.. #.                                       ";       
+    cout << "\n                                  .+.--.--. .  .++.  .-....-#+++-- .- #.                                       ";       
+    cout << "\n                                .++-..  .-  ..+-.    .++-+.+.+. -. .. -+                                       ";       
+    cout << "\n                             ..+-.  ...-....+-.  .-+++-.--.-+.- .-  ...+-                                      ";       
+    cout << "\n                          ..--.     -  ----....----......- .-.....-. ...--.                                    ";       
+    cout << "\n                                 ...-++-..--............ .-..--....  ..  .+-.                                  ";       
+    cout << "\n                           .-+++++-... ... .    .-.  .-. .-.. .+++.-. .-. ..-+-..-+#-.                         ";       
+    cout << "\n                                       .-.+++-.        .. ..-+..+...-++++++++++-.. .-++..  ....++.             ";       
+    cout << "\n                                ...---++..-. .-..    ...-++-...  .+-..        ..-.  ....-+#+-....---.          ";       
+    cout << "\n                                 ...   ...  .--..-.......  ..  ..  ..----.     . ..   .--...--+--...---------. ";       
+    cout << "\n                                     ...--...... ..-. .-+-.      .     ..... .+-+-.     ....-............      ";       
+    cout << "\n                                .....              ..++. .-+-... ...    ...++.   .-++.....                     ";       
+    cout << "\n                                             ...-++-.....    .-+++----+++.. ....     ..--++--.                 ";       
+    cout << "\n                                             ...                              .    .                           ";       
+    cout << "\n";                                                              
+    cout << "\n";                                                                           
+    cout << "\n                                             .xXxX                                                   ";           
+    cout << "\n                                              ;Xxx.     :&:     .;xx:.;xx:.;xx;.  :xx+.:xx+.  .$+    ";           
+    cout << "\n                                           :;.X+;x;&+.   :$x:  ;&; .XX; .X$: .$$.x&. ;&X  ;&;  .X$;. ";           
+    cout << "\n                                          X&. +$$; :&X.    .&X.$$.  x&.  X$.  $$:&X  :&+  :&x     x&:";           
+    cout << "\n                                         +&+        X&:;$   +&.X&:          .Xx  X&:      +$.:&:  .&+";           
+    cout << "\n                                         +&x        X&;;&x:+&:  +&X..            .$&+.   ::  .$$:;&+ ";           
+    cout << "\n                                         .&&.      .&$            :$&&+..         ..X&&;.            ";           
+    cout << "\n                                          .$&;    :&x.            :++x$&&&x.      .. .:x&&X.         ";           
+    cout << "\n                                            .:+xx+..                     ..X.             .x.        ";           
+    cout << "\n";
 }

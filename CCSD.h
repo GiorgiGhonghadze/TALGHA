@@ -13,7 +13,7 @@ public:
     CCSD(const std::vector<libint2::Atom>& input_atoms, const std::string& basisSet);
       
     
-    void compute_ccsd(MatrixXd &C, Eigen::VectorXd &eps);
+    void compute_ccsd(MatrixXd &C, Eigen::VectorXd &eps, double &E_scf);
     
 private:
 

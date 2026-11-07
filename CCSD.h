@@ -3,6 +3,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <vector>
 #include <string>
+#include "DIIS.h"
 
 using Eigen::Tensor;
 using Eigen::MatrixXd;
@@ -23,6 +24,7 @@ private:
     int nbf, total_electrons, n_occ, n_vir;
     double E_corr, residual_thresh, residual;
     
+    
     Eigen::VectorXd f;
     Tensor<double, 4> ERI_AO, ERI_MO, V;
     Tensor<double, 4> V_oooo, V_vvvv, V_oovv, V_ovvo, V_ooov, V_ovvv;
@@ -40,7 +42,7 @@ private:
     void init_integrals(MatrixXd &C, Eigen::VectorXd &eps);
     void init_amplitudes();
     void compute_intermediates();
-    void compute_residuals();
+    void compute_residuals(DIIS &DIISsolver);
     void evaluate_energy();
     
 }; 

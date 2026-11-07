@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/main.dir/CCSD.cpp.o"
   "CMakeFiles/main.dir/CCSD.cpp.o.d"
+  "CMakeFiles/main.dir/DIIS.cpp.o"
+  "CMakeFiles/main.dir/DIIS.cpp.o.d"
   "CMakeFiles/main.dir/ERI.cpp.o"
   "CMakeFiles/main.dir/ERI.cpp.o.d"
   "CMakeFiles/main.dir/HF.cpp.o"

@@ -1,6 +1,7 @@
 #include "MP2.h"
 #include "ERI.h"
 #include "CCSD.h"
+#include "DIIS.h"
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <libint2.hpp>
@@ -9,6 +10,7 @@
 #include <string>
 
 using Eigen::Tensor;
+using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using std::cout;
 
@@ -18,7 +20,7 @@ CCSD::CCSD(const std::vector<libint2::Atom>& input_atoms, const std::string& bas
     obs.set_pure(true);
     nbf = obs.nbf();
     total_electrons = std::accumulate(atoms.begin(), atoms.end(), 0, [](int sum, const libint2::Atom& atom) { return sum + atom.atomic_number;} ); 
-
+   
 }
 
 void CCSD::init_integrals(MatrixXd &C, Eigen::VectorXd &eps){
@@ -178,8 +180,7 @@ void CCSD::compute_intermediates(){
         for (int i = 0; i < n_occ; i++) {
             double value = 0.0;
             for (int e = 0; e < n_vir; e++) {
-                value += 0.5 * t1(i, e) * F_me(m,e);
-                for (int n = 0; n < n_occ; n++){
+                for (int n = 0; n < n_occ; n++) {
                     value += t1(n,e) * V_ooov(m, n, i, e);
                     for (int f = 0; f < n_vir; f++) {
                         value += 0.5 * tau_tilde(i, n, e, f) * V_oovv(m,n,e,f);
@@ -197,8 +198,7 @@ void CCSD::compute_intermediates(){
         for (int e = 0; e < n_vir; e++) {
             double value = 0.0;
             for (int m = 0; m < n_occ; m++) {
-                value -= 0.5 * t1(m, a) * F_me(m,e);
-                for (int f = 0; f < n_vir; f++){
+                for (int f = 0; f < n_vir; f++) {
                     value -= t1(m,f) * V_ovvv(m, a, e, f);
                     for (int n = 0; n < n_occ; n++) {
                         value -= 0.5 * tau_tilde(m, n, a, f) * V_oovv(m,n,e,f);
@@ -292,7 +292,7 @@ void CCSD::compute_intermediates(){
     }
 }
 
-void CCSD::compute_residuals(){
+void CCSD::compute_residuals(DIIS &DIISsolver){
 
     //CALCULATE R1 AND R2
     R1.resize(n_occ, n_vir);
@@ -345,13 +345,15 @@ void CCSD::compute_residuals(){
                         value += t1(j,e) * V_ovvv(i,e,a,b);
                         value -= t1(i,e) * V_ovvv(j,e,a,b);
 
-                        value += t2(i,j,a,e) * F_ae(b,e);
-                        value -= t2(i,j,b,e) * F_ae(a,e);
-
+                        double F_be_eff = F_ae(b,e);
+                        double F_ae_eff = F_ae(a,e);
+                        
                         for (int m = 0; m < n_occ; m++) {
-                            F_ae(b,e) -= 0.5 * t1(m,b) * F_me(m,e);
-                            F_ae(a,e) -= 0.5 * t1(m,a) * F_me(m,e);
+                            F_be_eff -= 0.5 * t1(m,b) * F_me(m,e);
+                            F_ae_eff -= 0.5 * t1(m,a) * F_me(m,e);
                         }
+                        value += t2(i,j,a,e) * F_be_eff;
+                        value -= t2(i,j,b,e) * F_ae_eff;
 
                         for (int f = 0; f < n_vir; f++) {
 
@@ -393,46 +395,75 @@ void CCSD::compute_residuals(){
     }
 
     //UPDATE AMPLITUDES AND COMPUTE TRUE RESIDUALS
+    int total_amplitudes = (n_occ * n_vir) + ((n_occ * (n_occ - 1) / 2) * (n_vir * (n_vir - 1) / 2));
+    VectorXd t_state(total_amplitudes);
+    VectorXd t_error(total_amplitudes);
+    Tensor<double, 2> t1_new;
+    int index = 0;
+    double sum = 0.0;
+    
     for (int i = 0; i < n_occ; i++){
         for (int a = 0; a < n_vir; a++){
             double denom = f(i) - f(n_occ + a);
             R1(i,a) -= denom * t1(i,a);
-            t1(i,a) += R1(i,a) / denom;
+            sum += pow(R1(i,a), 2); 
+
+            double dt1 = R1(i,a) / denom;
+            t1(i,a) += dt1;
+
+            t_state(index) = t1(i,a);               
+            t_error(index) = dt1;      
+            index++;
         }
     }
 
     for (int i = 0; i < n_occ; i++){
-        for (int j = 0; j < n_occ; j++){
+        for (int j = i+1; j < n_occ; j++){
             for (int a = 0; a < n_vir; a++){
-                for (int b = 0; b < n_vir; b++){
+                for (int b = a+1; b < n_vir; b++){
                     double denom = f(i) + f(j) - f(n_occ + a) - f(n_occ + b);
                     R2(i,j,a,b) -= denom * t2(i,j,a,b);
-                    t2(i,j,a,b) += R2(i,j,a,b) / denom;
+                    sum += pow(R2(i,j,a,b), 2);
+
+                    double dt2 = R2(i,j,a,b) / denom;
+                    t2(i,j,a,b) += dt2;
+
+                    t_state(index) = t2(i,j,a,b);               
+                    t_error(index) = dt2;      
+                    index++;
                 }
             }
         }
     }
 
-    double sum = 0.0;
+    residual = std::sqrt(sum);
 
+    
+    DIISsolver.calculate_coefficients(t_state, t_error);
+
+    index = 0;
     for (int i = 0; i < n_occ; i++) {
         for (int a = 0; a < n_vir; a++) {
-            sum += pow(R1(i,a),2);
+            t1(i, a) = DIISsolver.get_flattened()(index);
+            index++;
         }
     }
+    for (int i = 0; i < n_occ; i++){
+        for (int j = i+1; j < n_occ; j++){
+            for (int a = 0; a < n_vir; a++){
+                for (int b = a+1; b < n_vir; b++){
+                    
+                    double unique_val = DIISsolver.get_flattened()(index);
 
-    for (int i = 0; i < n_occ; i++) {
-        for (int j = 0; j < n_occ; j++) {
-            for (int a = 0; a < n_vir; a++) {
-                for (int b = 0; b < n_vir; b++) {
-                    sum += pow(R2(i,j,a,b),2);
+                    t2(i, j, a, b) =  unique_val;
+                    t2(j, i, a, b) = -unique_val;
+                    t2(i, j, b, a) = -unique_val;
+                    t2(j, i, b, a) =  unique_val;
+                    index++;
                 }
             }
         }
     }
-
-    int total_amplitudes = n_occ * n_vir + pow(n_occ,2) * pow(n_vir,2);
-    residual = std::sqrt(sum / (double)total_amplitudes);
 }
 
 void CCSD::evaluate_energy(){
@@ -457,7 +488,8 @@ void CCSD::compute_ccsd(MatrixXd &C, Eigen::VectorXd &eps, double &E_scf){
 
     residual_thresh = 2.5e-5;
     residual = 1;
-
+    
+    DIIS DIISsolver(7);
     init_integrals(C, eps);
     init_amplitudes();
     evaluate_energy();
@@ -468,7 +500,7 @@ void CCSD::compute_ccsd(MatrixXd &C, Eigen::VectorXd &eps, double &E_scf){
     while (abs(residual) > residual_thresh) {
 
         compute_intermediates();
-        compute_residuals();
+        compute_residuals(DIISsolver);
         evaluate_energy();
 
         cout << "Iter " << iter << " " << E_scf + E_corr << " " << residual << "\n";

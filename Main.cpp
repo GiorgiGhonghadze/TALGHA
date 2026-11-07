@@ -20,7 +20,6 @@ using std::vector;
 
 void print_header();
 
-
 int main(int argc, char* argv[]) {
 
     int counter = 0, xyzstart, charge, mult;
@@ -52,6 +51,11 @@ int main(int argc, char* argv[]) {
             method.erase (std::remove (method.begin(), method.end(), ' '), method.end());
             basis = line.substr(line.find(delimiter) + 1);
             basis.erase (std::remove (basis.begin(), basis.end(), ' '), basis.end());
+
+        }
+        if(line.substr(0, line.find(delimiter)) == "SCFMODE"){
+
+            scfMode = line.substr(line.find(delimiter) + 1);
 
         }
         if(line.substr(0, line.find(delimiter)) == "xyz"){
@@ -109,6 +113,7 @@ int main(int argc, char* argv[]) {
         MP2solver.compute_correlation(E_scf, n_occ, n_vir, C_occ, C_vir, eps);
 
     }else if (method == "CCSD"){
+        
         Eigen::MatrixXd C = HFsolver.get_C();
         Eigen::VectorXd eps = HFsolver.get_Eorb();
 

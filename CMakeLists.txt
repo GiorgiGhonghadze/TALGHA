@@ -16,7 +16,7 @@ find_package(OpenMP REQUIRED)
 
 # 3. Create the executable target FIRST
 # Note: If your C++ file is not named 'main.cpp', change it here so CMake can find it.
-add_executable(main  Main.cpp HF.cpp ERI.cpp MP2.cpp CCSD.cpp)
+add_executable(main  Main.cpp HF.cpp ERI.cpp MP2.cpp CCSD.cpp DIIS.cpp)
 
 # 4. Link the libraries to the explicitly defined 'HF' target
 target_link_libraries(main PRIVATE 

@@ -153,6 +153,30 @@ CCSD.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CCSD.cpp.s
 .PHONY : CCSD.cpp.s
 
+DIIS.o: DIIS.cpp.o
+.PHONY : DIIS.o
+
+# target to build an object file
+DIIS.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/DIIS.cpp.o
+.PHONY : DIIS.cpp.o
+
+DIIS.i: DIIS.cpp.i
+.PHONY : DIIS.i
+
+# target to preprocess a source file
+DIIS.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/DIIS.cpp.i
+.PHONY : DIIS.cpp.i
+
+DIIS.s: DIIS.cpp.s
+.PHONY : DIIS.s
+
+# target to generate assembly for a file
+DIIS.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/DIIS.cpp.s
+.PHONY : DIIS.cpp.s
+
 ERI.o: ERI.cpp.o
 .PHONY : ERI.o
 
@@ -261,6 +285,9 @@ help:
 	@echo "... CCSD.o"
 	@echo "... CCSD.i"
 	@echo "... CCSD.s"
+	@echo "... DIIS.o"
+	@echo "... DIIS.i"
+	@echo "... DIIS.s"
 	@echo "... ERI.o"
 	@echo "... ERI.i"
 	@echo "... ERI.s"

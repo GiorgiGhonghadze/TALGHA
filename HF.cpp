@@ -1,4 +1,5 @@
 #include "HF.h"
+#include "DIIS.h"
 #include <iostream>
 #include <libint2.hpp>
 #include <Eigen/Dense>
@@ -7,8 +8,6 @@ using std::cout;
 using std::string;
 using std::vector;
 using Eigen::MatrixXd;
-
-const double CODATA_10_TO_18 = 0.9999999995597658;
 
 HF::HF(const std::vector<libint2::Atom>& input_atoms, const std::string& basisSet)
  : atoms(input_atoms), basis(basisSet), obs(basisSet, input_atoms) {
@@ -43,9 +42,9 @@ double HF::compute_Vnn(const std::vector<libint2::Atom>& atoms) {
     for (int i = 0; i < natoms; i++) {
         for (int j = i + 1; j < natoms; j++) {
             
-            double dx = (atoms[i].x - atoms[j].x) * CODATA_10_TO_18;
-            double dy = (atoms[i].y - atoms[j].y) * CODATA_10_TO_18;
-            double dz = (atoms[i].z - atoms[j].z) * CODATA_10_TO_18;
+            double dx = (atoms[i].x - atoms[j].x);
+            double dy = (atoms[i].y - atoms[j].y);
+            double dz = (atoms[i].z - atoms[j].z);
             
             double distance = std::sqrt(pow(dx,2) + pow(dy,2) + pow(dz,2));
             
@@ -265,7 +264,22 @@ void HF::scf(std::string& scf_mode) {
 
     P_mat = 2.0 * C_mat * C_mat.transpose();
 
+     
+    cout << "Initial Guess Energy: "  << 0.5 * P_mat.cwiseProduct(Hcore_mat + Fock_mat).sum() + Enuc << "\n";
+
     int iter = 1;
+
+    if(scf_mode == "DIIS"){
+        
+        cout << "Turning on DIIS.." << "\n";
+
+    }else{
+
+
+
+    }
+
+    DIIS DIISsolver(7);
 
     while (abs(Eprev-Ecurr) > thresh){
 
@@ -277,24 +291,54 @@ void HF::scf(std::string& scf_mode) {
 
         //CONSTRUCT THE FOCK MATRIX
         Fock_mat = Hcore_mat + J_mat - 0.5 * K_mat;
-        Fock_mat_o = X_mat.transpose() * Fock_mat * X_mat;
 
-        //DIAGONILIZE FOCK MATRIX AND BUILD NEW DENSITY
-        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Focksolver(Fock_mat_o);
-        if (Focksolver.info() != Eigen::Success) abort();
-        C_mat = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
-        C = X_mat * Focksolver.eigenvectors();
-        P_mat_new = 2.0 * C_mat * C_mat.transpose();
-        P_mat = 0.5 * P_mat + 0.5 * P_mat_new;
+        if(scf_mode == "DIIS"){
 
-        Ecurr = 0.5 * P_mat.cwiseProduct(Hcore_mat + Fock_mat).sum() + Enuc;
-        cout << "Iteration " << iter << ": "  << Ecurr << "\n";
+            Eigen::VectorXd flat_vector = Fock_mat.reshaped<Eigen::RowMajor>();
+            Eigen::VectorXd error = ( X_mat.transpose() * (Fock_mat * P_mat * S_mat - S_mat * P_mat * Fock_mat) * X_mat).reshaped<Eigen::RowMajor>();
+            DIISsolver.calculate_coefficients(flat_vector, error);
+
+            Fock_mat = DIISsolver.get_flattened().reshaped<Eigen::RowMajor>(nbf, nbf);
+
+            Fock_mat_o = X_mat.transpose() * Fock_mat * X_mat;
+
+            //DIAGONILIZE FOCK MATRIX AND BUILD NEW DENSITY
+            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Focksolver(Fock_mat_o);
+            if (Focksolver.info() != Eigen::Success) abort();
+            C_mat = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
+            C = X_mat * Focksolver.eigenvectors();
+            P_mat_new = 2.0 * C_mat * C_mat.transpose();
+            P_mat = P_mat_new; //NO DAMPING FOR DIIS
+
+            Ecurr = 0.5 * P_mat.cwiseProduct(Hcore_mat + Fock_mat).sum() + Enuc;
+            cout << "Iteration " << iter << ": "  << Ecurr << "\n";
+
+            Eorb = Focksolver.eigenvalues();
+            C_occ = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
+            C_vir = (X_mat * Focksolver.eigenvectors()).rightCols(nbf - total_electrons/2);
+            
+        }else{
+            
+            Fock_mat_o = X_mat.transpose() * Fock_mat * X_mat;
+
+            //DIAGONILIZE FOCK MATRIX AND BUILD NEW DENSITY
+            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Focksolver(Fock_mat_o);
+            if (Focksolver.info() != Eigen::Success) abort();
+            C_mat = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
+            C = X_mat * Focksolver.eigenvectors();
+            P_mat_new = 2.0 * C_mat * C_mat.transpose();
+            P_mat = 0.5 * P_mat + 0.5 * P_mat_new;
+
+            Ecurr = 0.5 * P_mat.cwiseProduct(Hcore_mat + Fock_mat).sum() + Enuc;
+            cout << "Iteration " << iter << ": "  << Ecurr << "\n";
+
+            Eorb = Focksolver.eigenvalues();
+            C_occ = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
+            C_vir = (X_mat * Focksolver.eigenvectors()).rightCols(nbf - total_electrons/2);
+
+        }
         
-        Eorb = Focksolver.eigenvalues();
-        C_occ = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
-        C_vir = (X_mat * Focksolver.eigenvectors()).rightCols(nbf - total_electrons/2);
         iter++;
     }
-
 }
 

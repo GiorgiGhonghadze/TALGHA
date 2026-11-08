@@ -1,6 +1,6 @@
 # TALGHA: Quantum Chemistry Program
 
-TALGHA (ტალღა in Georgian) means wave and subsequently the program computes energies based on ab initio quantum chemical methods.
+TALGHA (ტალღა in Georgian) means wave and subsequently the program computes energies based on Ab Initio Quantum Chemistry Methods.
 
 ## Key Features
 

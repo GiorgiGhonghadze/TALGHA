@@ -1,0 +1,16 @@
+# CMake and build directories
+build/
+bin/
+lib/
+CMakeCache.txt
+CMakeFiles/
+
+# Object files and binaries
+*.o
+*.so
+*.a
+geom.xyz
+# Tooling and editor artifacts
+.cache/
+.vscode/
+compile_commands.json

@@ -25,9 +25,10 @@ private:
     std::string basis;
     libint2::BasisSet obs;
     int nbf, total_electrons;
+    double screening_thresh = 1e-12;
 
     Eigen::Tensor<double, 4> ERI_tensor; 
-    // Eigen::Tensor<double, 4> contracted_tensor; 
+    Eigen::MatrixXd Q_mat;
     
 }; 
 

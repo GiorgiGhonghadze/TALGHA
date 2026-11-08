@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <limits>
 #include <chrono>
 #include <libint2.hpp>
 #include <Eigen/Dense>
@@ -22,7 +23,7 @@ void print_header();
 
 int main(int argc, char* argv[]) {
 
-    int counter = 0, xyzstart, charge, mult;
+    int counter = 0, xyzstart = std::numeric_limits<int>::max() , charge, mult;
     string line, method, basis, fline;
     string delimiter = " ";
     string scfMode = "DIIS";
@@ -146,13 +147,16 @@ void print_header(){
 
 
 
-    cout << "\n                                               #######    #    #        #####  #     #    #   ";
-    cout << "\n                                                  #      # #   #       #     # #     #   # #  ";
-    cout << "\n                                                  #     #   #  #       #       #     #  #   # ";
-    cout << "\n                                                  #    #     # #       #  #### ####### #     #";
-    cout << "\n                                                  #    ####### #       #     # #     # #######";
-    cout << "\n                                                  #    #     # #       #     # #     # #     #";
-    cout << "\n                                                  #    #     # #######  #####  #     # #     #";
+                                                                    
+                                                                    
+                                                                    
+                                                                    
+    cout << "\n                                          $$$$$$$$$   X$$     .$X         ;$$$$$:   :$$    X$;     X$x    ";  
+    cout << "\n                                             +$x     ;$X$x    .$X       :$$:   +$$  :$$    X$;    X$$$;   ";  
+    cout << "\n                                             +$x    .$X X$;   .$X       $$          :$$    X$;   ;$X $$.  ";  
+    cout << "\n                                             +$x    X$.  X$.  .$X       $$   :$$$$: :$$++++X$;   $$  .$X  ";  
+    cout << "\n                                             +$x   x$$$$$$$X  .$X       x$X     X$: :$$    X$;  $$$$$$$$X ";  
+    cout << "\n                                             +$x  ;$X     +$X .$$$$$$$;  ;$$$$$$$X  :$$    X$; +$x     X$;";                            cout << "\n";                                                                                                                          
     cout << "\n";
     cout << "\n";                                                                                                
     cout << "\n";                                                                                                   

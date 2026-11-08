@@ -1,3 +1,0 @@
-/home/pseudo/BIGCPP/build/CMakeFiles/main.dir
-/home/pseudo/BIGCPP/build/CMakeFiles/edit_cache.dir
-/home/pseudo/BIGCPP/build/CMakeFiles/rebuild_cache.dir

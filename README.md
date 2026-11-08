@@ -5,7 +5,7 @@ TALGHA (ტალღა in Georgian) means wave and subsequently the program com
 ## Key Features
 
 * **Hartree-Fock SCF Engine:** All integrals are evaluated using Libint2, utilizing 8-fold integral symmetry and Schwartz prescreening for accelerration of ERI calculations.
-* **Post-HF Methods:** Features fully functional MP2 that scales as $O(N^{5})$ using partial MO transformation and CCSD code $O(N^{6})$ as formulated by Stanton et al. J. Chem. Phys. 94, 4334–4345 (1991).
+* **Post-HF Methods:** Features fully functional MP2 that scales as $O(N^{5})$ using partial MO transformation and CCSD code scaling $O(N^{6})$ as formulated by Stanton et al. J. Chem. Phys. 94, 4334–4345 (1991).
 
 ## Benchmarks & Validation
 

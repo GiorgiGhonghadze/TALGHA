@@ -26,9 +26,9 @@ private:
     std::string basis;
     libint2::BasisSet obs;
     int nbf, total_electrons;
-    double Enuc, Eprev = 0, Ecurr = 1, thresh = 1e-8;
+    double Enuc, Eprev = 0, Ecurr = 1, thresh = 1e-8, screening_thresh = 1e-12, damp;
 
-    Eigen::MatrixXd S_mat, T_mat, V_mat, Hcore_mat, Fock_mat, Fock_mat_o, X_mat, C_mat, P_mat, P_mat_new, J_mat, K_mat, C, C_occ, C_vir;
+    Eigen::MatrixXd S_mat, T_mat, V_mat, Hcore_mat, Fock_mat, Fock_mat_o, X_mat, C_mat, P_mat, P_mat_new, J_mat, K_mat, C, C_occ, C_vir, Q_mat;
     Eigen::VectorXd Eorb; 
 
     double compute_Vnn(const std::vector<libint2::Atom>& atoms);

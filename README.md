@@ -9,7 +9,7 @@ TALGHA (ტალღა in Georgian) means wave and subsequently the program com
 
 ## Benchmarks & Validation
 
-The TALGHA engine has been strictly validated against the ORCA 6.1.1(Same conditions, DIIS enabled, HCore guess, noRI, tolE of 10^{-9}). Total energies show near-perfect agreement, with deviations consistently falling below $10^{-6}$ Hartree.
+The TALGHA engine has been strictly validated against the ORCA 6.1.1(Same conditions, DIIS enabled, HCore guess, noRI, tolE of $10^{-9}$). Total energies show near-perfect agreement, with deviations consistently falling below $10^{-6}$ Hartree.
 
 ### Total Energies (Hartree)
 

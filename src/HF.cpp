@@ -174,11 +174,11 @@ void HF::compute_1e() {
 
 }
 
-void HF::compute_JK() {
+void HF::compute_JK(libint2::Engine &engine_2e) {
 
 
-    libint2::Engine eri_engine(libint2::Operator::coulomb, obs.max_nprim(), obs.max_l());
-    const auto& buf_eri = eri_engine.results();
+    
+    const auto& buf_eri = engine_2e.results();
     auto shell2bf = obs.shell2bf(); 
     int nshells = obs.size();
 
@@ -200,10 +200,11 @@ void HF::compute_JK() {
         }
     }
 
+
     for (size_t s1 = 0; s1 < obs.size(); ++s1) {
     size_t bf1_start = shell2bf[s1]; 
     size_t n1 = obs[s1].size();      
-
+    
         //S2 ONLY GOES UPTO S1 TO ENFORCE SYMMETRY IN PAIR 1
         for (size_t s2 = 0; s2 <= s1; ++s2) {
             size_t bf2_start = shell2bf[s2];
@@ -234,8 +235,8 @@ void HF::compute_JK() {
                     double max_contribution_estimate = p_max * q12 * Q_mat(s3, s4);
 
                     if (max_contribution_estimate < screening_thresh) continue;
-                      
-                    eri_engine.compute(obs[s1], obs[s2], obs[s3], obs[s4]);
+                    
+                    engine_2e.compute(obs[s1], obs[s2], obs[s3], obs[s4]);
                     const double* quartet_buffer = buf_eri[0]; 
                     if (quartet_buffer == nullptr) continue; 
                 
@@ -299,9 +300,7 @@ void HF::compute_JK() {
             }
         }
     }
-
-
-
+ 
 
 }
 
@@ -350,18 +349,17 @@ void HF::scf(std::string& scf_mode) {
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Ssolver(S_mat);
     if (Ssolver.info() != Eigen::Success) abort();
     X_mat = Ssolver.eigenvectors() * Ssolver.eigenvalues().cwiseSqrt().cwiseInverse().asDiagonal() *  Ssolver.eigenvectors().transpose();
-
-    //cout <<  "\n" << X_mat << "\n";
         
-    //INITIAL GUESS FOR THE FOCK MATRIX - Hcore
-    Fock_mat = X_mat.transpose() * Hcore_mat * X_mat;
-    double guess_energy = 0.5 * P_mat.cwiseProduct(Hcore_mat + Fock_mat).sum() + Enuc;
-    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Focksolver(Fock_mat);
+    //INITIAL GUESS
+    Fock_mat = Hcore_mat;
+    Fock_mat_o = X_mat.transpose() * Fock_mat * X_mat;
+
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Focksolver(Fock_mat_o);
     if (Focksolver.info() != Eigen::Success) abort();
 
-    C_mat = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
-
+    C_mat = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons / 2);
     P_mat = 2.0 * C_mat * C_mat.transpose();
+    Ecurr =  0.5 * P_mat.cwiseProduct(Hcore_mat + Fock_mat).sum() + Enuc;
 
     //TIME
     auto stop = high_resolution_clock::now();
@@ -371,7 +369,7 @@ void HF::scf(std::string& scf_mode) {
     cout << "Initial Guess Time: " << (int)sec << " sec " << (int)std::round(msec*1000) << " msec\n";
     //TIME
      
-    cout << "Initial Guess Energy: "  << guess_energy << "\n";
+    cout << "Initial Guess Energy: "  << Ecurr << "\n";
 
     int iter = 1;
     if(mode == "DIIS"){
@@ -381,9 +379,9 @@ void HF::scf(std::string& scf_mode) {
     }
 
     DIIS DIISsolver(7);
+    libint2::Engine eri_engine(libint2::Operator::coulomb, obs.max_nprim(), obs.max_l());
 
-    while (abs(Eprev-Ecurr) > thresh){
-
+    while (std::abs(Eprev - Ecurr) > thresh) {
 
         Eprev = Ecurr;
 
@@ -391,91 +389,80 @@ void HF::scf(std::string& scf_mode) {
         auto start = high_resolution_clock::now();
         //TIME
 
-        //COMPUTE COLOUMB AND EXCHANGE INTEGRALS
-        compute_JK();
+        //COMPUTE COULOMB AND EXCHANGE INTEGRALS FROM CURRENT P_mat
+        compute_JK(eri_engine);
 
         //TIME
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(stop - start);
         double sec, msec = std::modf(duration.count()/1000.0, &sec);
 
-        //cout << "J and K Integral Time: " << (int)sec << " sec " << (int)std::round(msec*1000) << " msec\n";
+        cout << "J and K Integral Time: " << (int)sec << " sec " << (int)std::round(msec*1000) << " msec\n";
         //TIME
 
-        //CONSTRUCT THE FOCK MATRIX
+        //CONSTRUCT THE PHYSICAL FOCK MATRIX
         Fock_mat = Hcore_mat + J_mat - 0.5 * K_mat;
 
-        if(mode == "DIIS"){
+        //EVALUATE SCF ENERGY BEFORE DIIS EXTRAPOLATION
+        Ecurr = 0.5 * P_mat.cwiseProduct(Hcore_mat + Fock_mat).sum() + Enuc;
+
+        if (mode == "DIIS") {
 
             //TIME 
             auto start_fock = high_resolution_clock::now();
             //TIME
+
             Eigen::VectorXd flat_vector = Fock_mat.reshaped<Eigen::RowMajor>();
-            Eigen::VectorXd error = ( X_mat.transpose() * (Fock_mat * P_mat * S_mat - S_mat * P_mat * Fock_mat) * X_mat).reshaped<Eigen::RowMajor>();
+            Eigen::VectorXd error = (X_mat.transpose() * (Fock_mat * P_mat * S_mat - S_mat * P_mat * Fock_mat) * X_mat).reshaped<Eigen::RowMajor>();
+            
             DIISsolver.calculate_coefficients(flat_vector, error);
 
             Fock_mat = DIISsolver.get_flattened().reshaped<Eigen::RowMajor>(nbf, nbf);
-
-            Ecurr = 0.5 * P_mat.cwiseProduct(Hcore_mat + Fock_mat).sum() + Enuc;
-
             Fock_mat_o = X_mat.transpose() * Fock_mat * X_mat;
 
-            //DIAGONILIZE FOCK MATRIX AND BUILD NEW DENSITY
+            //DIAGONALIZE EXTRAPOLATED FOCK MATRIX 
             Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Focksolver(Fock_mat_o);
             if (Focksolver.info() != Eigen::Success) abort();
-            C_mat = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
+
             C = X_mat * Focksolver.eigenvectors();
-            P_mat_new = 2.0 * C_mat * C_mat.transpose();
-
-            if(abs(Eprev-Ecurr) > 1) {
-
-                damp = 0.7;
-
-            }else{
-
-                damp = 0;
-            }
-
-            P_mat = damp * P_mat + (1.0-damp) * P_mat_new; 
+            C_mat = C.leftCols(total_electrons / 2);
+            P_mat = 2.0 * C_mat * C_mat.transpose();
 
             //TIME
             auto stop_fock = high_resolution_clock::now();
             auto duration_fock = duration_cast<milliseconds>(stop_fock - start_fock);
             double sec, msec = std::modf(duration_fock.count()/1000.0, &sec);
 
-            //cout << "Fock Matrix Diagonlization Time: " << (int)sec << " sec " << (int)std::round(msec*1000) << " msec\n";
+            cout << "Fock Matrix Diagonlization Time: " << (int)sec << " sec " << (int)std::round(msec*1000) << " msec\n";
             //TIME
 
-            
-            cout << "\n" << "Iteration " << iter << ": "  << Ecurr << "\n";
+
+            cout << "\nIteration " << iter << ": " << Ecurr << "\n";
 
             Eorb = Focksolver.eigenvalues();
-            C_occ = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
-            C_vir = (X_mat * Focksolver.eigenvectors()).rightCols(nbf - total_electrons/2);
-            
-        }else{
-            damp = 0.7;
-            Ecurr = 0.5 * P_mat.cwiseProduct(Hcore_mat + Fock_mat).sum() + Enuc;
+            C_occ = C_mat;
+            C_vir = C.rightCols(nbf - total_electrons / 2);
 
+        } else {
+            damp = 0.7;
             Fock_mat_o = X_mat.transpose() * Fock_mat * X_mat;
 
-            //DIAGONILIZE FOCK MATRIX AND BUILD NEW DENSITY
+            //DIAGONALIZE FOCK MATRIX AND BUILD DENSITY
             Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Focksolver(Fock_mat_o);
             if (Focksolver.info() != Eigen::Success) abort();
-            C_mat = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
-            C = X_mat * Focksolver.eigenvectors();
-            P_mat_new = 2.0 * C_mat * C_mat.transpose();
-            P_mat = damp * P_mat + (1.0-damp) * P_mat_new;
 
-           
-            cout << "Iteration " << iter << ": "  << Ecurr << "\n";
+            C = X_mat * Focksolver.eigenvectors();
+            C_mat = C.leftCols(total_electrons / 2);
+            P_mat_new = 2.0 * C_mat * C_mat.transpose();
+            P_mat = damp * P_mat + (1.0 - damp) * P_mat_new;
+
+            cout << "Iteration " << iter << ": " << Ecurr << "\n";
 
             Eorb = Focksolver.eigenvalues();
-            C_occ = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);
-            C_vir = (X_mat * Focksolver.eigenvectors()).rightCols(nbf - total_electrons/2);
-
+            C_occ = C_mat;
+            C_vir = C.rightCols(nbf - total_electrons / 2);
         }
-        
+
         iter++;
     }
 }

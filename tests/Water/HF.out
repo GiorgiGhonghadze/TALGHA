@@ -55,72 +55,46 @@
 Parsing input file: HF.inp
 Basis set is set to STO-3G
 
-HF Calculation started!
+HF Calculation Started!
 
-Initial Guess Time: 0 sec 10 msec
-Initial Guess Energy: 9.1895337626
+Initial Guess Time: 0 sec 0 msec
+Initial Guess Energy: -118.1703782278
+Turning on DIIS..
+J and K Integral Time: 0 sec 0 msec
+Fock Matrix Diagonlization Time: 0 sec 0 msec
+
 Iteration 1: -73.2327241457
-Iteration 2: -73.7110317391
-Iteration 3: -74.0653963483
-Iteration 4: -74.3237432922
-Iteration 5: -74.5099039083
-Iteration 6: -74.6429448458
-Iteration 7: -74.7374711216
-Iteration 8: -74.8043565852
-Iteration 9: -74.8515458900
-Iteration 10: -74.8847700728
-Iteration 11: -74.9081273575
-Iteration 12: -74.9245306332
-Iteration 13: -74.9360415183
-Iteration 14: -74.9441147791
-Iteration 15: -74.9497747875
-Iteration 16: -74.9537417663
-Iteration 17: -74.9565215496
-Iteration 18: -74.9584691251
-Iteration 19: -74.9598334799
-Iteration 20: -74.9607891817
-Iteration 21: -74.9614585861
-Iteration 22: -74.9619274346
-Iteration 23: -74.9622558012
-Iteration 24: -74.9624857714
-Iteration 25: -74.9626468258
-Iteration 26: -74.9627596143
-Iteration 27: -74.9628386001
-Iteration 28: -74.9628939129
-Iteration 29: -74.9629326474
-Iteration 30: -74.9629597721
-Iteration 31: -74.9629787665
-Iteration 32: -74.9629920674
-Iteration 33: -74.9630013815
-Iteration 34: -74.9630079036
-Iteration 35: -74.9630124706
-Iteration 36: -74.9630156686
-Iteration 37: -74.9630179080
-Iteration 38: -74.9630194760
-Iteration 39: -74.9630205740
-Iteration 40: -74.9630213428
-Iteration 41: -74.9630218811
-Iteration 42: -74.9630222581
-Iteration 43: -74.9630225220
-Iteration 44: -74.9630227068
-Iteration 45: -74.9630228362
-Iteration 46: -74.9630229269
-Iteration 47: -74.9630229903
-Iteration 48: -74.9630230347
-Iteration 49: -74.9630230658
-Iteration 50: -74.9630230876
-Iteration 51: -74.9630231029
-Iteration 52: -74.9630231135
-Iteration 53: -74.9630231210
-Iteration 54: -74.9630231262
-Iteration 55: -74.9630231299
-Iteration 56: -74.9630231325
-Iteration 57: -74.9630231343
-Iteration 58: -74.9630231355
-Iteration 59: -74.9630231364
+J and K Integral Time: 0 sec 0 msec
+Fock Matrix Diagonlization Time: 0 sec 0 msec
 
-FINAL SCF ENERGY IS -74.9630231364 Eh
+Iteration 2: -74.9457879611
+J and K Integral Time: 0 sec 0 msec
+Fock Matrix Diagonlization Time: 0 sec 0 msec
 
-FINAL HF ENERGY IS -74.9630231364 Eh
+Iteration 3: -74.9621676039
+J and K Integral Time: 0 sec 0 msec
+Fock Matrix Diagonlization Time: 0 sec 0 msec
 
-EXECUTION TIME: 0 sec 303 msec
+Iteration 4: -74.9629782399
+J and K Integral Time: 0 sec 0 msec
+Fock Matrix Diagonlization Time: 0 sec 0 msec
+
+Iteration 5: -74.9630209283
+J and K Integral Time: 0 sec 0 msec
+Fock Matrix Diagonlization Time: 0 sec 0 msec
+
+Iteration 6: -74.9630231197
+J and K Integral Time: 0 sec 0 msec
+Fock Matrix Diagonlization Time: 0 sec 0 msec
+
+Iteration 7: -74.9630231385
+J and K Integral Time: 0 sec 0 msec
+Fock Matrix Diagonlization Time: 0 sec 0 msec
+
+Iteration 8: -74.9630231385
+
+FINAL SCF ENERGY IS -74.9630231385 Eh
+
+FINAL HF ENERGY IS -74.9630231385 Eh
+
+EXECUTION TIME: 0 sec 18 msec

@@ -23,6 +23,12 @@ void print_header();
 
 int main(int argc, char* argv[]) {
 
+    //file checkkk
+    if (argc < 2) {
+        std::cerr << "no input dumbass\n";
+        return 1;
+    }
+
     int counter = 0, xyzstart = std::numeric_limits<int>::max() , charge, mult;
     string line, method, basis, fline;
     string delimiter = " ";
@@ -34,44 +40,43 @@ int main(int argc, char* argv[]) {
     std::ifstream input(argv[1]);
     std::ofstream xyzFile("geom.xyz");
 
-    //file checkkk
-    if (argc < 2) {
-        std::cerr << "no input dumbass\n";
-        return 1;
-    }
+
 
     print_header();
     cout << "Parsing input file: "  << argv[1] << std::endl;
     
+    //FUNCTION TO STRIP WHITESPACES
+    auto strip_whitespace = [](std::string& s) {
+        s.erase(std::remove_if(s.begin(), s.end(),
+            [](unsigned char c) { return std::isspace(c); }), s.end());
+    };
+
     //PARSE THE INPUT AND CREATE XYZ
     while (std::getline(input, line)) {
 
-        if(counter == 0){
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
 
+        if (counter == 0) {
             method = line.substr(0, line.find(delimiter));
-            method.erase (std::remove (method.begin(), method.end(), ' '), method.end());
+            strip_whitespace(method);
+
             basis = line.substr(line.find(delimiter) + 1);
-            basis.erase (std::remove (basis.begin(), basis.end(), ' '), basis.end());
-
+            strip_whitespace(basis);
         }
-        if(line.substr(0, line.find(delimiter)) == "SCFMODE"){
-
+        if (line.substr(0, line.find(delimiter)) == "SCFMODE") {
             scfMode = line.substr(line.find(delimiter) + 1);
-
+            strip_whitespace(scfMode);
         }
-        if(line.substr(0, line.find(delimiter)) == "xyz"){
-
+        if (line.substr(0, line.find(delimiter)) == "xyz") {
             xyzstart = counter;
-
-        } 
-        if (counter > xyzstart)
-        {
-
-            xyzlines.push_back(line);
-           
         }
-        
-        counter++; 
+        if (counter > xyzstart && !line.empty()) {
+            xyzlines.push_back(line);
+        }
+
+        counter++;
     }
 
     //CREATE AN XYZ FILE

@@ -33,7 +33,7 @@ private:
 
     double compute_Vnn(const std::vector<libint2::Atom>& atoms);
     void compute_1e();
-    void compute_JK();
+    void compute_JK(libint2::Engine &engine_2e);
     
 }; 
 

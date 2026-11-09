@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(TALGHA CXX)
 
-add_compile_options(-O3 -g -fsanitize=address -fsanitize=undefined)
-add_link_options(-fsanitize=address -fsanitize=undefined)
+add_compile_options(-O3 -march=native -DNDEBUG)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

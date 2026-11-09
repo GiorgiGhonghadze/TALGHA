@@ -1,0 +1,9 @@
+HF STO-3G //First keyword is method [HF, MP2, CCSD] and the second one basis set [any supported by Libint2]
+
+SCFMODE DIIS // SCFOMODE [DIIS, noDIIS], default is DIIS in SCF 
+//Coupled Cluster equations are solved exclusively with DIIS and cannot be turned off
+
+xyz 0 1 //xyz coordinats must be placed immediately after the header "xyz [charge] [multiplicity]", file should not terminate with empty line
+O   0.000000   0.000000   0.117300
+H   0.000000   0.757200  -0.469200
+H   0.000000  -0.757200  -0.469200

@@ -1,0 +1,251 @@
+
+                                          $$$$$$$$$   X$$     .$X         ;$$$$$:   :$$    X$;     X$x    
+                                             +$x     ;$X$x    .$X       :$$:   +$$  :$$    X$;    X$$$;   
+                                             +$x    .$X X$;   .$X       $$          :$$    X$;   ;$X $$.  
+                                             +$x    X$.  X$.  .$X       $$   :$$$$: :$$++++X$;   $$  .$X  
+                                             +$x   x$$$$$$$X  .$X       x$X     X$: :$$    X$;  $$$$$$$$X 
+                                             +$x  ;$X     +$X .$$$$$$$;  ;$$$$$$$X  :$$    X$; +$x     X$;
+
+
+
+
+
+                                                                   ...------------..                           
+                                                              ..-++-....        ...--++..                      
+                                                           .-+-..                     ..-+-.                   
+                                                       ..-+.                              .+-.   ....          
+                                                     .--.           .  .....                .+-. .--.          
+                                                   .--.           ...  ....   ......         .--  ..           
+                                                 .--.    .. ..  -+-++..+--+..+..-- .  .--.    .+. ..           
+                                               .--      .....+-+-..--....-+..  ..+-.+-..   .   .+              
+                                              .-.       .+---   ..-  ..-.  ..--.......-+-+--.   #.             
+                                            .--.  .    .+..-.   .. .-.  ......--------...--.   -+              
+                                           .+-  .-..+++-. ....   .-.      ..-+..     ...---#. .+.              
+                                          .+.     --.-   -.-.        -   .++    .-+        .###.               
+                                         -+.     .-.-.    .-   .   ...  -+.       .+--                         
+                                        .+.  .-+--. ..   .-   -   .-   .+.                  .+-                
+                                       -+.  .-+.   .-    ..  ..  .- ...+.                    ..                
+                                      -+  .+....     .-.+#-...+#-+  ..+-                                       
+                                    .--.  -. ..  ....+-.       .-+....#.                                       
+                                   .--.-..-. ..  .--.      .-.....+.. #.                                       
+                                  .+.--.--. .  .++.  .-....-#+++-- .- #.                                       
+                                .++-..  .-  ..+-.    .++-+.+.+. -. .. -+                                       
+                             ..+-.  ...-....+-.  .-+++-.--.-+.- .-  ...+-                                      
+                          ..--.     -  ----....----......- .-.....-. ...--.                                    
+                                 ...-++-..--............ .-..--....  ..  .+-.                                  
+                           .-+++++-... ... .    .-.  .-. .-.. .+++.-. .-. ..-+-..-+#-.                         
+                                       .-.+++-.        .. ..-+..+...-++++++++++-.. .-++..  ....++.             
+                                ...---++..-. .-..    ...-++-...  .+-..        ..-.  ....-+#+-....---.          
+                                 ...   ...  .--..-.......  ..  ..  ..----.     . ..   .--...--+--...---------. 
+                                     ...--...... ..-. .-+-.      .     ..... .+-+-.     ....-............      
+                                .....              ..++. .-+-... ...    ...++.   .-++.....                     
+                                             ...-++-.....    .-+++----+++.. ....     ..--++--.                 
+                                             ...                              .    .                           
+
+
+                                             .xXxX                                                   
+                                              ;Xxx.     :&:     .;xx:.;xx:.;xx;.  :xx+.:xx+.  .$+    
+                                           :;.X+;x;&+.   :$x:  ;&; .XX; .X$: .$$.x&. ;&X  ;&;  .X$;. 
+                                          X&. +$$; :&X.    .&X.$$.  x&.  X$.  $$:&X  :&+  :&x     x&:
+                                         +&+        X&:;$   +&.X&:          .Xx  X&:      +$.:&:  .&+
+                                         +&x        X&;;&x:+&:  +&X..            .$&+.   ::  .$$:;&+ 
+                                         .&&.      .&$            :$&&+..         ..X&&;.            
+                                          .$&;    :&x.            :++x$&&&x.      .. .:x&&X.         
+                                            .:+xx+..                     ..X.             .x.        
+Parsing input file: CCSD.inp
+Basis set is set to STO-3G
+CCSD Calculation started!
+
+Initial Guess Time: 0 sec 8 msec
+Initial Guess Energy: 9.1895337626
+
+J and K Integral Time: 0 sec 14 msec
+Iteration 1: -73.2327241457
+
+J and K Integral Time: 0 sec 10 msec
+Iteration 2: -73.7110317391
+
+J and K Integral Time: 0 sec 9 msec
+Iteration 3: -74.0653963483
+
+J and K Integral Time: 0 sec 9 msec
+Iteration 4: -74.3237432922
+
+J and K Integral Time: 0 sec 9 msec
+Iteration 5: -74.5099039083
+
+J and K Integral Time: 0 sec 9 msec
+Iteration 6: -74.6429448458
+
+J and K Integral Time: 0 sec 9 msec
+Iteration 7: -74.7374711216
+
+J and K Integral Time: 0 sec 9 msec
+Iteration 8: -74.8043565852
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 9: -74.8515458900
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 10: -74.8847700728
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 11: -74.9081273575
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 12: -74.9245306332
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 13: -74.9360415183
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 14: -74.9441147791
+
+J and K Integral Time: 0 sec 4 msec
+Iteration 15: -74.9497747875
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 16: -74.9537417663
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 17: -74.9565215496
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 18: -74.9584691251
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 19: -74.9598334799
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 20: -74.9607891817
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 21: -74.9614585861
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 22: -74.9619274346
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 23: -74.9622558012
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 24: -74.9624857714
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 25: -74.9626468258
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 26: -74.9627596143
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 27: -74.9628386001
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 28: -74.9628939129
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 29: -74.9629326474
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 30: -74.9629597721
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 31: -74.9629787665
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 32: -74.9629920674
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 33: -74.9630013815
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 34: -74.9630079036
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 35: -74.9630124706
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 36: -74.9630156686
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 37: -74.9630179080
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 38: -74.9630194760
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 39: -74.9630205740
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 40: -74.9630213428
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 41: -74.9630218811
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 42: -74.9630222581
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 43: -74.9630225220
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 44: -74.9630227068
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 45: -74.9630228362
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 46: -74.9630229269
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 47: -74.9630229903
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 48: -74.9630230347
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 49: -74.9630230658
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 50: -74.9630230876
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 51: -74.9630231029
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 52: -74.9630231135
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 53: -74.9630231210
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 54: -74.9630231262
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 55: -74.9630231299
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 56: -74.9630231325
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 57: -74.9630231343
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 58: -74.9630231355
+
+J and K Integral Time: 0 sec 3 msec
+Iteration 59: -74.9630231364
+
+FINAL SCF ENERGY IS -74.9630231364 Eh
+
+Iter 0 -74.9985687998
+Iter 1 -75.0079213968 0.0888825739
+Iter 2 -75.0108096162 0.0316254470
+Iter 3 -75.0124582650 0.0126388532
+Iter 4 -75.0124673445 0.0008630551
+Iter 5 -75.0124613216 0.0001140216
+Iter 6 -75.0124618675 0.0000210301
+
+FINAL CCSD ENERGY IS -75.0124618675 Eh
+
+EXECUTION TIME: 0 sec 592 msec

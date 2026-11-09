@@ -309,6 +309,7 @@ void HF::scf(std::string& scf_mode) {
    
     cout << std::fixed << std::setprecision(10);
 
+    string mode = scf_mode;
     //TIME 
     auto start = high_resolution_clock::now();
     //TIME
@@ -373,8 +374,7 @@ void HF::scf(std::string& scf_mode) {
     cout << "Initial Guess Energy: "  << guess_energy << "\n";
 
     int iter = 1;
-
-    if(scf_mode == "DIIS"){
+    if(mode == "DIIS"){
         
         cout << "Turning on DIIS.." << "\n";
 
@@ -399,16 +399,16 @@ void HF::scf(std::string& scf_mode) {
         auto duration = duration_cast<milliseconds>(stop - start);
         double sec, msec = std::modf(duration.count()/1000.0, &sec);
 
-        cout << "\nJ and K Integral Time: " << (int)sec << " sec " << (int)std::round(msec*1000) << " msec\n";
+        //cout << "J and K Integral Time: " << (int)sec << " sec " << (int)std::round(msec*1000) << " msec\n";
         //TIME
 
         //CONSTRUCT THE FOCK MATRIX
         Fock_mat = Hcore_mat + J_mat - 0.5 * K_mat;
 
-        if(scf_mode == "DIIS"){
+        if(mode == "DIIS"){
 
             //TIME 
-            auto start = high_resolution_clock::now();
+            auto start_fock = high_resolution_clock::now();
             //TIME
             Eigen::VectorXd flat_vector = Fock_mat.reshaped<Eigen::RowMajor>();
             Eigen::VectorXd error = ( X_mat.transpose() * (Fock_mat * P_mat * S_mat - S_mat * P_mat * Fock_mat) * X_mat).reshaped<Eigen::RowMajor>();
@@ -439,15 +439,15 @@ void HF::scf(std::string& scf_mode) {
             P_mat = damp * P_mat + (1.0-damp) * P_mat_new; 
 
             //TIME
-            auto stop = high_resolution_clock::now();
-            auto duration = duration_cast<milliseconds>(stop - start);
-            double sec, msec = std::modf(duration.count()/1000.0, &sec);
+            auto stop_fock = high_resolution_clock::now();
+            auto duration_fock = duration_cast<milliseconds>(stop_fock - start_fock);
+            double sec, msec = std::modf(duration_fock.count()/1000.0, &sec);
 
-            cout << "\nFock Matrix Diagonlization Time: " << (int)sec << " sec " << (int)std::round(msec*1000) << " msec\n";
+            //cout << "Fock Matrix Diagonlization Time: " << (int)sec << " sec " << (int)std::round(msec*1000) << " msec\n";
             //TIME
 
             
-            cout << "Iteration " << iter << ": "  << Ecurr << "\n";
+            cout << "\n" << "Iteration " << iter << ": "  << Ecurr << "\n";
 
             Eorb = Focksolver.eigenvalues();
             C_occ = (X_mat * Focksolver.eigenvectors()).leftCols(total_electrons/2);

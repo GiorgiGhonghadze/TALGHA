@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 
 
     cout << "Basis set is set to " << basis << "\n";
-    cout << method << " Calculation started!\n" << "\n";
+    cout << "\n" <<  method << " Calculation Started!\n" << "\n";
 
     //RUN HF CALC
     HF HFsolver(atoms, basis);
@@ -117,6 +117,8 @@ int main(int argc, char* argv[]) {
         
         Eigen::MatrixXd C = HFsolver.get_C();
         Eigen::VectorXd eps = HFsolver.get_Eorb();
+
+        cout << "\n" << "Coupled Cluster Iterations Started!\n";
 
         CCSD CCSDsolver(atoms, basis);
         CCSDsolver.compute_ccsd(C, eps, E_scf);

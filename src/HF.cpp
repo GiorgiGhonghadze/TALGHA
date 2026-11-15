@@ -27,9 +27,15 @@ HF::HF(const std::vector<libint2::Atom>& input_atoms, const std::string& basisSe
     X_mat = MatrixXd::Zero(nbf, nbf);
     C_mat = MatrixXd::Zero(nbf, nbf);
     P_mat = MatrixXd::Zero(nbf, nbf);
+    P_prev = MatrixXd::Zero(nbf, nbf);
     P_mat_new = MatrixXd::Zero(nbf, nbf);
     J_mat = MatrixXd::Zero(nbf, nbf);
+    J_prev = MatrixXd::Zero(nbf, nbf);
     K_mat = MatrixXd::Zero(nbf, nbf);
+    K_prev = MatrixXd::Zero(nbf, nbf);
+    dP_mat = MatrixXd::Zero(nbf, nbf);
+    dJ_mat = MatrixXd::Zero(nbf, nbf);
+    dK_mat = MatrixXd::Zero(nbf, nbf);
 
     C_occ = MatrixXd::Zero(nbf, total_electrons/2);
     C_vir = MatrixXd::Zero(nbf, nbf - total_electrons/2);
@@ -182,8 +188,8 @@ void HF::compute_JK(libint2::Engine &engine_2e) {
     auto shell2bf = obs.shell2bf(); 
     int nshells = obs.size();
 
-    J_mat.setZero();
-    K_mat.setZero();
+    dJ_mat.setZero();
+    dK_mat.setZero();
 
     Eigen::MatrixXd P_shell = Eigen::MatrixXd::Zero(nshells, nshells);
     for (size_t s1 = 0; s1 < nshells; ++s1) {
@@ -194,7 +200,7 @@ void HF::compute_JK(libint2::Engine &engine_2e) {
             size_t n2  = obs[s2].size();
 
             //MAXIMUM DENISTY ELEMENT IN THE BLOCK
-            double max_p = P_mat.block(bf1, bf2, n1, n2).cwiseAbs().maxCoeff();
+            double max_p = dP_mat.block(bf1, bf2, n1, n2).cwiseAbs().maxCoeff();
             P_shell(s1, s2) = max_p;
             P_shell(s2, s1) = max_p;
         }
@@ -236,7 +242,8 @@ void HF::compute_JK(libint2::Engine &engine_2e) {
 
                     if (max_contribution_estimate < screening_thresh) continue;
                     
-                    engine_2e.compute(obs[s1], obs[s2], obs[s3], obs[s4]);
+                    engine_2e.compute2<libint2::Operator::coulomb, libint2::BraKet::xx_xx, 0>(obs[s1], obs[s2], obs[s3], obs[s4],
+                    &shell_pairs[s1][s2], &shell_pairs[s3][s4]);
                     const double* quartet_buffer = buf_eri[0]; 
                     if (quartet_buffer == nullptr) continue; 
                 
@@ -272,26 +279,24 @@ void HF::compute_JK(libint2::Engine &engine_2e) {
 
                                     double val = ERI_value * factor;
 
-                                    J_mat(mu, nu) += val * P_mat(lam, sig);
-                                    J_mat(nu, mu) += val * P_mat(lam, sig);
-                                    J_mat(mu, nu) += val * P_mat(sig, lam);
-                                    J_mat(nu, mu) += val * P_mat(sig, lam);
+                                    dJ_mat(mu, nu) += 2.0 * val * dP_mat(lam, sig);
+                                    dJ_mat(nu, mu) += 2.0 * val * dP_mat(lam, sig);
+                                    
 
-                                    K_mat(mu, lam) += val * P_mat(nu, sig);
-                                    K_mat(nu, lam) += val * P_mat(mu, sig);
-                                    K_mat(mu, sig) += val * P_mat(nu, lam);
-                                    K_mat(nu, sig) += val * P_mat(mu, lam);
+                                    dK_mat(mu, lam) += val * dP_mat(nu, sig);
+                                    dK_mat(nu, lam) += val * dP_mat(mu, sig);
+                                    dK_mat(mu, sig) += val * dP_mat(nu, lam);
+                                    dK_mat(nu, sig) += val * dP_mat(mu, lam);
 
                                     //SWAPPED ELECTRON PAIRS
-                                    J_mat(lam, sig) += val * P_mat(mu, nu);
-                                    J_mat(sig, lam) += val * P_mat(mu, nu);
-                                    J_mat(lam, sig) += val * P_mat(nu, mu);
-                                    J_mat(sig, lam) += val * P_mat(nu, mu);
+                                    dJ_mat(lam, sig) += 2.0 * val * dP_mat(mu, nu);
+                                    dJ_mat(sig, lam) += 2.0 * val * dP_mat(mu, nu);
+                        
 
-                                    K_mat(lam, mu) += val * P_mat(sig, nu);
-                                    K_mat(sig, mu) += val * P_mat(lam, nu);
-                                    K_mat(lam, nu) += val * P_mat(sig, mu);
-                                    K_mat(sig, nu) += val * P_mat(lam, mu);
+                                    dK_mat(lam, mu) += val * dP_mat(sig, nu);
+                                    dK_mat(sig, mu) += val * dP_mat(lam, nu);
+                                    dK_mat(lam, nu) += val * dP_mat(sig, mu);
+                                    dK_mat(sig, nu) += val * dP_mat(lam, mu);
                                 }
                             }
                         }
@@ -321,12 +326,30 @@ void HF::scf(std::string& scf_mode) {
 
     //COMPUTE Q_mat FOR SCHWARTZ PRESCREENING 
     Q_mat = Eigen::MatrixXd::Zero(obs.size(), obs.size());
+    shell_pairs.resize(obs.size(), std::vector<libint2::ShellPair>(obs.size()));
     Q_mat.setZero();
+
+    
 
     libint2::Engine engine_2center(libint2::Operator::coulomb, obs.max_nprim(), obs.max_l());
     const auto& buf_eri = engine_2center.results();
     auto shell2bf = obs.shell2bf(); 
 
+    const double ln_prec = std::log(screening_thresh);
+
+    //PRECOMPUTE GAUSSIAN PRODUCT PAIRS
+    for (size_t s1 = 0; s1 < obs.size(); ++s1) {
+        for (size_t s2 = 0; s2 <= s1; ++s2) {
+            
+            shell_pairs[s1][s2].init(
+                obs[s1],
+                obs[s2],
+                ln_prec,
+                libint2::ScreeningMethod::SchwarzInf
+            );
+
+        }
+    }    
 
     for (size_t s1 = 0; s1 < obs.size(); ++s1) {
         for (size_t s2 = 0; s2 <= s1; ++s2) {
@@ -380,17 +403,36 @@ void HF::scf(std::string& scf_mode) {
 
     DIIS DIISsolver(7);
     libint2::Engine eri_engine(libint2::Operator::coulomb, obs.max_nprim(), obs.max_l());
+    eri_engine.set_precision(screening_thresh);
+
+    P_prev.setZero();
+    J_prev.setZero();
+    K_prev.setZero();
+    int steps_since_reset = 0;
 
     while (std::abs(Eprev - Ecurr) > thresh) {
 
         Eprev = Ecurr;
-
-        //TIME 
         auto start = high_resolution_clock::now();
-        //TIME
 
-        //COMPUTE COULOMB AND EXCHANGE INTEGRALS FROM CURRENT P_mat
+        bool full_build = (steps_since_reset == 0 || steps_since_reset >= 8);
+        if (full_build) {
+            dP_mat = P_mat;
+            J_prev.setZero();
+            K_prev.setZero();
+            steps_since_reset = 1;
+        } else {
+            dP_mat = P_mat - P_prev;
+            steps_since_reset++;
+        }
+
         compute_JK(eri_engine);
+
+        J_prev += dJ_mat;
+        K_prev += dK_mat;
+        J_mat = J_prev;
+        K_mat = K_prev;
+        P_prev = P_mat;
 
         //TIME
         auto stop = high_resolution_clock::now();

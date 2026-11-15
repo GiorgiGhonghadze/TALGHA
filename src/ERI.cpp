@@ -32,7 +32,6 @@ void ERI::compute_eri() {
     ERI_tensor.setZero();
     Q_mat.setZero();
 
-
     for (size_t s1 = 0; s1 < obs.size(); ++s1) {
         size_t n1 = obs[s1].size();
         for (size_t s2 = 0; s2 <= s1; ++s2) {

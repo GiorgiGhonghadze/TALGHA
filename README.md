@@ -31,7 +31,7 @@ The TALGHA engine has been validated against the ORCA 6.1.1 (Same conditions, DI
 * **BLAS**    (Linear algebra, Eigen dependencies)
 * **LAPACK**  (Linear algebra, Eigen dependencies)
 * **Libint2** (Molecular integrals)
-* **OpenMP**  (Parallelization) #NOT YET IMPLEMENTED
+* **OpenMP**  (Parallelization) #HF only
 
 ### Compilation
 Clone the repository and build using CMake:

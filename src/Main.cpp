@@ -44,8 +44,6 @@ int main(int argc, char* argv[]) {
     std::ifstream input(argv[1]);
     std::ofstream xyzFile("geom.xyz");
 
-
-
     print_header();
     cout << "Parsing input file: "  << argv[1] << std::endl;
     

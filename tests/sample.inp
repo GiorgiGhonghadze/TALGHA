@@ -1,5 +1,7 @@
 HF STO-3G //First keyword is method [HF, MP2, CCSD] and the second one basis set [any supported by Libint2]
 
+nthreads 8 //Set threads for OpenMP and Blas, default is 1 
+
 SCFMODE DIIS // SCFOMODE [DIIS, noDIIS], default is DIIS in SCF 
 //Coupled Cluster equations are solved exclusively with DIIS and cannot be turned off
 

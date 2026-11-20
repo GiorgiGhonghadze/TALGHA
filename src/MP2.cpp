@@ -1,8 +1,8 @@
 #include "MP2.h"
 #include "ERI.h"
+#include <libint2.hpp>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
-#include <libint2.hpp>
 #include <vector>
 #include <string>
 

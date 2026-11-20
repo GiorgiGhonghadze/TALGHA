@@ -1,8 +1,11 @@
 #include "HF.h"
 #include "DIIS.h"
+#include "Globals.h"
 #include <iostream>
 #include <libint2.hpp>
 #include <Eigen/Dense>
+#include <cblas.h>
+#include <omp.h>
 #include <chrono>
 
 using std::cout;
@@ -180,123 +183,133 @@ void HF::compute_1e() {
 
 }
 
-void HF::compute_JK(libint2::Engine &engine_2e) {
-
-
-    
-    const auto& buf_eri = engine_2e.results();
-    auto shell2bf = obs.shell2bf(); 
-    int nshells = obs.size();
+void HF::compute_JK() {
 
     dJ_mat.setZero();
     dK_mat.setZero();
 
-    Eigen::MatrixXd P_shell = Eigen::MatrixXd::Zero(nshells, nshells);
-    for (size_t s1 = 0; s1 < nshells; ++s1) {
-        size_t bf1 = shell2bf[s1];
-        size_t n1  = obs[s1].size();
-        for (size_t s2 = 0; s2 <= s1; ++s2) {
-            size_t bf2 = shell2bf[s2];
-            size_t n2  = obs[s2].size();
+    #pragma omp parallel num_threads(nthreads)
+    {
 
-            //MAXIMUM DENISTY ELEMENT IN THE BLOCK
-            double max_p = dP_mat.block(bf1, bf2, n1, n2).cwiseAbs().maxCoeff();
-            P_shell(s1, s2) = max_p;
-            P_shell(s2, s1) = max_p;
-        }
-    }
-
-
-    for (size_t s1 = 0; s1 < obs.size(); ++s1) {
-    size_t bf1_start = shell2bf[s1]; 
-    size_t n1 = obs[s1].size();      
-    
-        //S2 ONLY GOES UPTO S1 TO ENFORCE SYMMETRY IN PAIR 1
-        for (size_t s2 = 0; s2 <= s1; ++s2) {
-            size_t bf2_start = shell2bf[s2];
-            size_t n2 = obs[s2].size();
+        libint2::Engine eri_engine(libint2::Operator::coulomb, obs.max_nprim(), obs.max_l());
+        eri_engine.set_precision(screening_thresh);
         
-            //S3 ONLY GOES UPTO S1 TO ENFORCE SWAPPING PAIR SYMMETRY
-            for (size_t s3 = 0; s3 <= s1; ++s3) {
-                size_t bf3_start = shell2bf[s3];
-                size_t n3 = obs[s3].size();
-                double q12 = Q_mat(s1, s2);
-                
-                //S4 ONLY GOES UPTO S3 TO ENFORCE SYMMETRY IN PAIR 2 OR UPTO S2 IF S3==S1
-                size_t s4_max = (s3 == s1) ? s2 : s3;
-                for (size_t s4 = 0; s4 <= s4_max; ++s4) {
-                    size_t bf4_start = shell2bf[s4];
-                    size_t n4 = obs[s4].size();
+        const auto& buf_eri = eri_engine.results();
+        auto shell2bf = obs.shell2bf(); 
+        int nshells = obs.size();
 
-                    double p_max = std::max({
-                        4.0 * P_shell(s1, s2),
-                        4.0 * P_shell(s3, s4),
-                        P_shell(s1, s3),
-                        P_shell(s1, s4),
-                        P_shell(s2, s3),
-                        P_shell(s2, s4)
-                    });
+        Eigen::MatrixXd P_shell = Eigen::MatrixXd::Zero(nshells, nshells);
 
-                    //CHECK MAXIMUM BOUNDS FOR PAIR 1 AND PAIR 2 SCALED WITH THE MAXIMUM ELEMENT OF DENSITY
-                    double max_contribution_estimate = p_max * q12 * Q_mat(s3, s4);
+        #pragma omp critical
+        {
+            for (size_t s1 = 0; s1 < nshells; ++s1) {
+                size_t bf1 = shell2bf[s1];
+                size_t n1  = obs[s1].size();
+                for (size_t s2 = 0; s2 <= s1; ++s2) {
+                    size_t bf2 = shell2bf[s2];
+                    size_t n2  = obs[s2].size();
 
-                    if (max_contribution_estimate < screening_thresh) continue;
-                    
-                    engine_2e.compute2<libint2::Operator::coulomb, libint2::BraKet::xx_xx, 0>(obs[s1], obs[s2], obs[s3], obs[s4],
-                    &shell_pairs[s1][s2], &shell_pairs[s3][s4]);
-                    const double* quartet_buffer = buf_eri[0]; 
-                    if (quartet_buffer == nullptr) continue; 
-                
-                    size_t index = 0;
-                    for (size_t f1 = 0; f1 < n1; ++f1) {
-                        size_t mu = bf1_start + f1;
-                        for (size_t f2 = 0; f2 < n2; ++f2) {
-                            size_t nu = bf2_start + f2;
+                    //MAXIMUM DENISTY ELEMENT IN THE BLOCK
+                    double max_p = dP_mat.block(bf1, bf2, n1, n2).cwiseAbs().maxCoeff();
+                    P_shell(s1, s2) = max_p;
+                    P_shell(s2, s1) = max_p;
+                }
+            }
 
-                            if (mu < nu) {
-                                index += n3 * n4; 
-                                continue;
-                            }
-                            int p12 = mu * (mu + 1) / 2 + nu;
+        }
+        
+        #pragma omp for schedule(dynamic) reduction(+:dJ_mat, dK_mat)
+        for (size_t s1 = 0; s1 < obs.size(); ++s1) {
+        size_t bf1_start = shell2bf[s1]; 
+        size_t n1 = obs[s1].size();      
+        
+            //S2 ONLY GOES UPTO S1 TO ENFORCE SYMMETRY IN PAIR 1
+            for (size_t s2 = 0; s2 <= s1; ++s2) {
+                size_t bf2_start = shell2bf[s2];
+                size_t n2 = obs[s2].size();
+            
+                //S3 ONLY GOES UPTO S1 TO ENFORCE SWAPPING PAIR SYMMETRY
+                for (size_t s3 = 0; s3 <= s1; ++s3) {
+                    size_t bf3_start = shell2bf[s3];
+                    size_t n3 = obs[s3].size();
+                    double q12 = Q_mat(s1, s2);
 
-                            for (size_t f3 = 0; f3 < n3; ++f3) {
-                                size_t lam = bf3_start + f3;
-                                for (size_t f4 = 0; f4 < n4; ++f4, ++index) {
-                                    size_t sig = bf4_start + f4;
-                                
-                                    
-                                    if (lam < sig) continue;
-                                    int p34 = lam * (lam + 1) / 2 + sig;
-                                    if (s1 == s3 && s2 == s4 && p12 < p34) continue;
+                    //S4 ONLY GOES UPTO S3 TO ENFORCE SYMMETRY IN PAIR 2 OR UPTO S2 IF S3==S1
+                    size_t s4_max = (s3 == s1) ? s2 : s3;
+                    for (size_t s4 = 0; s4 <= s4_max; ++s4) {
+                        size_t bf4_start = shell2bf[s4];
+                        size_t n4 = obs[s4].size();
 
-                                    double ERI_value = quartet_buffer[index];
+                        double p_max = std::max({
+                            4.0 * P_shell(s1, s2),
+                            4.0 * P_shell(s3, s4),
+                            P_shell(s1, s3),
+                            P_shell(s1, s4),
+                            P_shell(s2, s3),
+                            P_shell(s2, s4)
+                        });
 
-                                    //SCALE BY 0.5 IF MU==NU TO AVOID DOUBLE COUNTING
-                                    double factor = 1.0;
-                                    if (mu == nu)   factor *= 0.5;
-                                    if (lam == sig) factor *= 0.5;
-                                    if (p12 == p34) factor *= 0.5;
+                        //CHECK MAXIMUM BOUNDS FOR PAIR 1 AND PAIR 2 SCALED WITH THE MAXIMUM ELEMENT OF DENSITY
+                        double max_contribution_estimate = p_max * q12 * Q_mat(s3, s4);
 
-                                    double val = ERI_value * factor;
+                        if (max_contribution_estimate < screening_thresh) continue;
 
-                                    dJ_mat(mu, nu) += 2.0 * val * dP_mat(lam, sig);
-                                    dJ_mat(nu, mu) += 2.0 * val * dP_mat(lam, sig);
-                                    
-
-                                    dK_mat(mu, lam) += val * dP_mat(nu, sig);
-                                    dK_mat(nu, lam) += val * dP_mat(mu, sig);
-                                    dK_mat(mu, sig) += val * dP_mat(nu, lam);
-                                    dK_mat(nu, sig) += val * dP_mat(mu, lam);
-
-                                    //SWAPPED ELECTRON PAIRS
-                                    dJ_mat(lam, sig) += 2.0 * val * dP_mat(mu, nu);
-                                    dJ_mat(sig, lam) += 2.0 * val * dP_mat(mu, nu);
+                        eri_engine.compute2<libint2::Operator::coulomb, libint2::BraKet::xx_xx, 0>(obs[s1], obs[s2], obs[s3], obs[s4],
+                        &shell_pairs[s1][s2], &shell_pairs[s3][s4]);
+                        const double* quartet_buffer = buf_eri[0]; 
+                        if (quartet_buffer == nullptr) continue; 
                         
+                        size_t index = 0;
+                        for (size_t f1 = 0; f1 < n1; ++f1) {
+                            size_t mu = bf1_start + f1;
+                            for (size_t f2 = 0; f2 < n2; ++f2) {
+                                size_t nu = bf2_start + f2;
 
-                                    dK_mat(lam, mu) += val * dP_mat(sig, nu);
-                                    dK_mat(sig, mu) += val * dP_mat(lam, nu);
-                                    dK_mat(lam, nu) += val * dP_mat(sig, mu);
-                                    dK_mat(sig, nu) += val * dP_mat(lam, mu);
+                                if (mu < nu) {
+                                    index += n3 * n4; 
+                                    continue;
+                                }
+                                int p12 = mu * (mu + 1) / 2 + nu;
+
+                                for (size_t f3 = 0; f3 < n3; ++f3) {
+                                    size_t lam = bf3_start + f3;
+                                    for (size_t f4 = 0; f4 < n4; ++f4, ++index) {
+                                        size_t sig = bf4_start + f4;
+                                    
+
+                                        if (lam < sig) continue;
+                                        int p34 = lam * (lam + 1) / 2 + sig;
+                                        if (s1 == s3 && s2 == s4 && p12 < p34) continue;
+
+                                        double ERI_value = quartet_buffer[index];
+
+                                        //SCALE BY 0.5 IF MU==NU TO AVOID DOUBLE COUNTING
+                                        double factor = 1.0;
+                                        if (mu == nu)   factor *= 0.5;
+                                        if (lam == sig) factor *= 0.5;
+                                        if (p12 == p34) factor *= 0.5;
+
+                                        double val = ERI_value * factor;
+
+                                        dJ_mat(mu, nu) += 2.0 * val * dP_mat(lam, sig);
+                                        dJ_mat(nu, mu) += 2.0 * val * dP_mat(lam, sig);
+
+
+                                        dK_mat(mu, lam) += val * dP_mat(nu, sig);
+                                        dK_mat(nu, lam) += val * dP_mat(mu, sig);
+                                        dK_mat(mu, sig) += val * dP_mat(nu, lam);
+                                        dK_mat(nu, sig) += val * dP_mat(mu, lam);
+
+                                        //SWAPPED ELECTRON PAIRS
+                                        dJ_mat(lam, sig) += 2.0 * val * dP_mat(mu, nu);
+                                        dJ_mat(sig, lam) += 2.0 * val * dP_mat(mu, nu);
+                                    
+
+                                        dK_mat(lam, mu) += val * dP_mat(sig, nu);
+                                        dK_mat(sig, mu) += val * dP_mat(lam, nu);
+                                        dK_mat(lam, nu) += val * dP_mat(sig, mu);
+                                        dK_mat(sig, nu) += val * dP_mat(lam, mu);
+                                    }
                                 }
                             }
                         }
@@ -304,9 +317,9 @@ void HF::compute_JK(libint2::Engine &engine_2e) {
                 }
             }
         }
-    }
- 
+    
 
+    }   
 }
 
 void HF::scf(std::string& scf_mode) {
@@ -328,8 +341,6 @@ void HF::scf(std::string& scf_mode) {
     Q_mat = Eigen::MatrixXd::Zero(obs.size(), obs.size());
     shell_pairs.resize(obs.size(), std::vector<libint2::ShellPair>(obs.size()));
     Q_mat.setZero();
-
-    
 
     libint2::Engine engine_2center(libint2::Operator::coulomb, obs.max_nprim(), obs.max_l());
     const auto& buf_eri = engine_2center.results();
@@ -368,7 +379,9 @@ void HF::scf(std::string& scf_mode) {
             Q_mat(s2, s1) = q_val;
         }
     }
+    
     //DIAGONALIZE OVERLAP MATRIX AND CONSTRUCT TRANSFORMATION MATRIX X
+    openblas_set_num_threads(nthreads);
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> Ssolver(S_mat);
     if (Ssolver.info() != Eigen::Success) abort();
     X_mat = Ssolver.eigenvectors() * Ssolver.eigenvalues().cwiseSqrt().cwiseInverse().asDiagonal() *  Ssolver.eigenvectors().transpose();
@@ -395,15 +408,13 @@ void HF::scf(std::string& scf_mode) {
     cout << "Initial Guess Energy: "  << Ecurr << "\n";
 
     int iter = 1;
-    if(mode == "DIIS"){
+    // if(mode == "DIIS"){
         
-        cout << "Turning on DIIS.." << "\n";
+    //     cout << "Turning on DIIS.." << "\n";
 
-    }
+    // }
 
     DIIS DIISsolver(7);
-    libint2::Engine eri_engine(libint2::Operator::coulomb, obs.max_nprim(), obs.max_l());
-    eri_engine.set_precision(screening_thresh);
 
     P_prev.setZero();
     J_prev.setZero();
@@ -417,6 +428,8 @@ void HF::scf(std::string& scf_mode) {
 
         bool full_build = (steps_since_reset == 0 || steps_since_reset >= 8);
         if (full_build) {
+
+            if(iter != 1) cout << "\n***Performing a Full Fock Rebuild***\n";
             dP_mat = P_mat;
             J_prev.setZero();
             K_prev.setZero();
@@ -426,7 +439,7 @@ void HF::scf(std::string& scf_mode) {
             steps_since_reset++;
         }
 
-        compute_JK(eri_engine);
+        compute_JK();
 
         J_prev += dJ_mat;
         K_prev += dK_mat;
@@ -498,6 +511,11 @@ void HF::scf(std::string& scf_mode) {
             P_mat_new = 2.0 * C_mat * C_mat.transpose();
             P_mat = damp * P_mat + (1.0 - damp) * P_mat_new;
 
+            if(iter == 4){
+
+            cout << "***Turning on DIIS...***" << "\n";
+
+            }
             cout << "Iteration " << iter << ": " << Ecurr << "\n";
 
             Eorb = Focksolver.eigenvalues();

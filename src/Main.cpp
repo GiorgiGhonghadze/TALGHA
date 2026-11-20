@@ -2,11 +2,13 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <string>
 #include <limits>
 #include <chrono>
 #include <libint2.hpp>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
+#include "Globals.h"
 #include "HF.h"
 #include "ERI.h"
 #include "MP2.h"
@@ -21,6 +23,8 @@ using std::vector;
 
 void print_header();
 
+int nthreads = 1;
+
 int main(int argc, char* argv[]) {
 
     //file checkkk
@@ -29,7 +33,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    int counter = 0, xyzstart = std::numeric_limits<int>::max() , charge, mult;
+    int counter = 0, xyzstart = std::numeric_limits<int>::max(), charge, mult = 1;
     string line, method, basis, fline;
     string delimiter = " ";
     string scfMode = "DIIS";
@@ -72,6 +76,13 @@ int main(int argc, char* argv[]) {
         if (line.substr(0, line.find(delimiter)) == "xyz") {
             xyzstart = counter;
         }
+        if (line.substr(0, line.find(delimiter)) == "nthreads")
+        {
+            string val = line.substr(line.find(delimiter) + 1);
+            strip_whitespace(val);
+            nthreads = std::stoi(val);
+        }
+        
         if (counter > xyzstart && !line.empty()) {
             xyzlines.push_back(line);
         }
@@ -99,6 +110,7 @@ int main(int argc, char* argv[]) {
 
     cout << "Basis set is set to " << basis << "\n";
     cout << "\n" <<  method << " Calculation Started!\n" << "\n";
+    cout <<  "Calculation running on " << nthreads << " thread(s)\n" "\n" ;
 
     //RUN HF CALC
     HF HFsolver(atoms, basis);

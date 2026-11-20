@@ -2,9 +2,9 @@
 #include "ERI.h"
 #include "CCSD.h"
 #include "DIIS.h"
+#include <libint2.hpp>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
-#include <libint2.hpp>
 #include <cmath>
 #include <vector>
 #include <string>

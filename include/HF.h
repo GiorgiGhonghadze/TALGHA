@@ -1,6 +1,6 @@
 #pragma once
-#include <Eigen/Dense>
 #include <libint2.hpp>
+#include <Eigen/Dense>
 #include <vector>
 #include <string>
 
@@ -35,7 +35,7 @@ private:
 
     double compute_Vnn(const std::vector<libint2::Atom>& atoms);
     void compute_1e();
-    void compute_JK(libint2::Engine &engine_2e);
+    void compute_JK();
     
 }; 
 

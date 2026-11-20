@@ -1,6 +1,6 @@
 #pragma once
-#include <Eigen/Dense>
 #include <libint2.hpp>
+#include <Eigen/Dense>
 #include <vector>
 #include <string>
 

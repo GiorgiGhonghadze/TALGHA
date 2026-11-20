@@ -22,5 +22,14 @@ target_link_libraries(main PRIVATE
     Libint2::cxx 
     ${BLAS_LIBRARIES} 
     ${LAPACK_LIBRARIES}
+    lapacke
     OpenMP::OpenMP_CXX
 )
+
+target_compile_definitions(main PRIVATE
+    EIGEN_USE_LAPACKE
+    EIGEN_USE_BLAS  
+    "lapack_complex_float=std::complex<float>"
+    "lapack_complex_double=std::complex<double>"
+)
+

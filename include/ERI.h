@@ -14,7 +14,11 @@ public:
       
     
     void compute_eri();
-    Eigen::Tensor<double, 4> motransform_eri(const Eigen::Tensor<double, 2> &C1, const Eigen::Tensor<double, 2> &C2, const Eigen::Tensor<double, 2> &C3,const Eigen::Tensor<double, 2> &C4);
+    Eigen::Tensor<double, 4> motransform_eri(    
+    const Eigen::Tensor<double, 2> &C1,
+    const Eigen::Tensor<double, 2> &C2,
+    const Eigen::Tensor<double, 2> &C3,
+    const Eigen::Tensor<double, 2> &C4);
     // Eigen::Tensor<double, 4> get_contracted_tensor() const { return contracted_tensor; }
     Eigen::Tensor<double, 4> get_eri() const { return ERI_tensor; }
  
